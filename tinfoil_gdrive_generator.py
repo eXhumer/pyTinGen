@@ -106,7 +106,7 @@ class gdrive():
                 raise Exception("Unretryable Error")
         return response
 
-    def _ls(self, folder_id, fields="files(id,size),nextPageToken", searchTerms=""):
+    def _ls(self, folder_id, fields="files(id,name,size),nextPageToken", searchTerms=""):
         files = []
         resp = {"nextPageToken": None}
         while "nextPageToken" in resp:
@@ -127,7 +127,7 @@ class gdrive():
             searchTerms="mimeType contains \"application/vnd.google-apps.folder\""
         )
 
-    def _lsf(self, folder_id, fields="files(id,size),nextPageToken"):
+    def _lsf(self, folder_id, fields="files(id,name,size),nextPageToken"):
         return self._ls(
             folder_id,
             fields=fields,
@@ -136,7 +136,7 @@ class gdrive():
 
     def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist):
         for _file in self._lsf(folder_id):
-            dict_files.update({_file["id"]: _file["size"]})
+            dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"]}})
         for _folder in self._lsd(folder_id):
             self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist)
 
@@ -174,13 +174,14 @@ class tinfoil_gdrive_generator():
         with open(self.output_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, share_files="update"):
+    def index_updater(self, share_files="update", disable_new_url_format=False):
         all_files = {}
         for folder_id in self.folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"])
-        for (file_id, file_size) in all_files.items():
+        for (file_id, file_details) in all_files.items():
             share_file = False
-            check = {"url": "https://docs.google.com/uc?export=download&id={file_id}".format(file_id=file_id), "size": int(file_size)}
+            check = {"url": "https://docs.google.com/uc?export=download&id={file_id}#{file_name}" if disable_new_url_format else "gdrive:/{file_id}#{file_name}", "size": int(file_details["size"])}
+            check["url"] = check["url"].format(file_id=file_id, file_name=file_details["name"])
             if check not in self.index_json["files"]:
                 self.index_json["files"].append(check)
                 if share_files == "update":
@@ -206,6 +207,7 @@ def main():
     parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="File Path JSON to update.")
     parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
+    parser.add_argument("--disable-new-url-format", action="store_false", help="Use this flag to generate link in old url format. May not work with tinfoil anymore.")
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
