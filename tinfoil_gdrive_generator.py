@@ -20,6 +20,7 @@ from google.auth.exceptions import TransportError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from pathlib import Path
 from tqdm import tqdm
+from _crypto import encrypt_file
 import socket, json, argparse
 
 class gdrive():
@@ -202,7 +203,9 @@ def main():
     parser.add_argument("--share-files", default="update", choices=["update", "all"], help="By default, the script only shares files that were newly added. If you want to share old files, use \"all\" instead of \"update\".")
     parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to select the correct account before downloading the credentails file.")
     parser.add_argument("--token", default="token.json", metavar="TOKEN_FILE_PATH", help="File Path of a Google Token file.")
-    parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="JSON file path to update.")
+    parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="File Path JSON to update.")
+    parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
+    parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
@@ -213,6 +216,8 @@ def main():
     #     generator.gdrive_service.upload_to_my_drive()
     # if args.upload_to_scan_folders and len(args.folder_ids) > 0:
     #     generator.gdrive_service.upload_to_folder(folder_id) for folder_id in args.folder_ids
+    if args.encrypt_file:
+        encrypt_file(args.output_json, args.encrypt_file, public_key=args.public_key)
 
 if __name__ == "__main__":
     main()
