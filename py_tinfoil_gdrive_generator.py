@@ -22,6 +22,7 @@ from pathlib import Path
 from tqdm import tqdm
 from _crypto import encrypt_file
 import socket, json, argparse
+import urllib.parse
 
 class gdrive():
     def __init__(self, token_path, credentials_path):
@@ -174,14 +175,17 @@ class tinfoil_gdrive_generator():
         with open(self.output_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, share_files="update", disable_new_url_format=False):
+    def index_updater(self, share_files="update", use_old_url_format=False):
         all_files = {}
         for folder_id in self.folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"])
         for (file_id, file_details) in all_files.items():
+            check = {}
             share_file = False
-            check = {"url": "https://docs.google.com/uc?export=download&id={file_id}#{file_name}" if disable_new_url_format else "gdrive:/{file_id}#{file_name}", "size": int(file_details["size"])}
-            check["url"] = check["url"].format(file_id=file_id, file_name=file_details["name"])
+            if use_old_url_format:
+                check = {"url": "https://docs.google.com/uc?export=download&id={file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote_plus(file_details["name"])), "size": int(file_details["size"])}
+            else:
+                check = {"url": "gdrive:/{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote_plus(file_details["name"])), "size": int(file_details["size"])}
             if check not in self.index_json["files"]:
                 self.index_json["files"].append(check)
                 if share_files == "update":
@@ -196,7 +200,7 @@ class tinfoil_gdrive_generator():
         self._update_index_file()
 
 def main():
-    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate a JSON file with file links in doc format for use with Tinfoil.")
+    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate a JSON file with file links in doc format for use with Tinfoil. File links generated with this will require either SXOS/tinfoil license with Google Token passed to tinfoil for new URL format. or Google API Key to use old format. (Old format doesn't seem to work yet with tinfoil. Most likely a bug on tinfoil end.)")
     parser.add_argument(nargs="*", metavar="FOLDER_ID_TO_SCAN", dest="folder_ids", help="Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a time.")
     # parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id")
     # parser.add_argument("--upload-to-my-drive", action="store_true")
@@ -207,11 +211,11 @@ def main():
     parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="File Path JSON to update.")
     parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
-    parser.add_argument("--disable-new-url-format", action="store_false", help="Use this flag to generate link in old url format. May not work with tinfoil anymore.")
+    parser.add_argument("--use-old-url-format", action="store_true", help="Use this flag to generate link in old url format. Requires Google API Key in tinfoil options. Doesn't seem to work with tinfoil anymore.")
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
-    generator.index_updater(share_files=args.share_files)
+    generator.index_updater(share_files=args.share_files, use_old_url_format=args.use_old_url_format)
     # if args.upload_folder_id:
     #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
     # if args.upload_to_my_drive:
