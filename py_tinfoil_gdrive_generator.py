@@ -205,7 +205,7 @@ def main():
     # parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id")
     # parser.add_argument("--upload-to-my-drive", action="store_true")
     # parser.add_argument("--upload-to-scan-folders", action="store_true")
-    parser.add_argument("--share-files", default="update", choices=["update", "all"], help="By default, the script only shares files that were newly added. If you want to share old files, use \"all\" instead of \"update\".")
+    parser.add_argument("--share-files", choices=["update", "all"], help="By default, the script only shares files that were newly added. If you want to share old files, use \"all\" instead of \"update\".")
     parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to select the correct account before downloading the credentails file.")
     parser.add_argument("--token", default="token.json", metavar="TOKEN_FILE_PATH", help="File Path of a Google Token file.")
     parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="File Path JSON to update.")
