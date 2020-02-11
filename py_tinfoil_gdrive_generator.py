@@ -135,11 +135,12 @@ class gdrive():
             searchTerms="not mimeType contains \"application/vnd.google-apps.folder\""
         )
 
-    def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist):
+    def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True):
         for _file in self._lsf(folder_id):
             dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"]}})
-        for _folder in self._lsd(folder_id):
-            self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist)
+        if recursion:
+            for _folder in self._lsd(folder_id):
+                self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist, recursion=recursion)
 
     def share_file(self, file_id_to_share):
         self._apicall(self.drive_service.permissions().create(fileId=file_id_to_share, supportsAllDrives=True, body={
@@ -175,10 +176,10 @@ class tinfoil_gdrive_generator():
         with open(self.output_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, share_files="update", use_old_url_format=False):
+    def index_updater(self, share_files=None, use_old_url_format=False, recursion=True):
         all_files = {}
         for folder_id in self.folder_ids:
-            self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"])
+            self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion)
         for (file_id, file_details) in all_files.items():
             check = {}
             share_file = False
@@ -211,11 +212,12 @@ def main():
     parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="File Path JSON to update.")
     parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
-    parser.add_argument("--use-old-url-format", action="store_true", help="Use this flag to generate link in old url format. Requires Google API Key in tinfoil options. Doesn't seem to work with tinfoil anymore.")
+    parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of the folder, without going through the sub-folders in it.")
+    parser.add_argument("--use-old-url-format", action="store_true", help="Use this flag to generate link in old URL format. Works in Tinfoil 8.10 and above. Still preferred and recommended by blawar to use gdrive:/ format with --share-files flag, as tinfoil will take care of the task of making direct links from now on. Here is the order in which tinfoil requests the link from gdrive:/ protocol according to blawar, OAuth2 Token > User API Key > Tinfoil Workaround.")
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
-    generator.index_updater(share_files=args.share_files, use_old_url_format=args.use_old_url_format)
+    generator.index_updater(share_files=args.share_files, use_old_url_format=args.use_old_url_format, recursion=args.recursion)
     # if args.upload_folder_id:
     #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
     # if args.upload_to_my_drive:
