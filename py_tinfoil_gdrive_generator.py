@@ -201,7 +201,7 @@ class tinfoil_gdrive_generator():
         self._update_index_file()
 
 def main():
-    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate a JSON file with file links in doc format for use with Tinfoil. File links generated with this will require either SXOS/tinfoil license with Google Token passed to tinfoil for new URL format. or Google API Key to use old format. (Old format doesn't seem to work yet with tinfoil. Most likely a bug on tinfoil end.)")
+    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate a JSON file with Google Drive file links for use with Tinfoil.")
     parser.add_argument(nargs="*", metavar="FOLDER_ID_TO_SCAN", dest="folder_ids", help="Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a time.")
     # parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id")
     # parser.add_argument("--upload-to-my-drive", action="store_true")
@@ -213,7 +213,7 @@ def main():
     parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
     parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of the folder, without going through the sub-folders in it.")
-    parser.add_argument("--use-old-url-format", action="store_true", help="Use this flag to generate link in old URL format. Works in Tinfoil 8.10 and above. Still preferred and recommended by blawar to use gdrive:/ format with --share-files flag, as tinfoil will take care of the task of making direct links from now on. Here is the order in which tinfoil requests the link from gdrive:/ protocol according to blawar, OAuth2 Token > User API Key > Tinfoil Workaround.")
+    parser.add_argument("--use-old-url-format", action="store_true", help="Use this flag to generate link in old URL format. Works in Tinfoil 8.10 and above. Still preferred and recommended by blawar to use gdrive:/ format (with --share-files flag if not using OAuth2 / API Key), as tinfoil will take care of the task of making direct links from now on. Here is the order in which tinfoil requests the link from gdrive:/ protocol according to blawar, OAuth2 Token > User API Key > Tinfoil Workaround.")
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
