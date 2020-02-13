@@ -21,8 +21,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from pathlib import Path
 from tqdm import tqdm
 from _crypto import encrypt_file
-import socket, json, argparse
-import urllib.parse
+import socket, json, argparse, urllib.parse, time
 
 class gdrive():
     def __init__(self, token_path, credentials_path):
