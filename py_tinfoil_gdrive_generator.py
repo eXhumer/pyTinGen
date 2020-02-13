@@ -185,7 +185,7 @@ class tinfoil_gdrive_generator():
         all_files = {}
         for folder_id in self.folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion)
-        for (file_id, file_details, is_shared) in all_files.items():
+        for (file_id, file_details) in all_files.items():
             check = {}
             share_file = False
             if use_old_url_format:
@@ -194,9 +194,9 @@ class tinfoil_gdrive_generator():
                 check = {"url": "gdrive:/{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote_plus(file_details["name"])), "size": int(file_details["size"])}
             if check not in self.index_json["files"]:
                 self.index_json["files"].append(check)
-                if share_files == "update" and not is_shared:
+                if share_files == "update" and not file_details["shared"]:
                     share_file = True
-            if not share_file and share_files == "all" and not is_shared:
+            if not share_file and share_files == "all" and not file_details["shared"]:
                 share_file = True
             if share_file:
                 self.files_to_share.append(file_id)
