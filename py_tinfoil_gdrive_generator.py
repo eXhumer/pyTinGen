@@ -106,7 +106,7 @@ class gdrive():
                 raise Exception("Unretryable Error")
         return response
 
-    def _ls(self, folder_id, fields="files(id,name,size),nextPageToken", searchTerms=""):
+    def _ls(self, folder_id, fields="files(id,name,size,permissions(role,type)),nextPageToken", searchTerms=""):
         files = []
         resp = {"nextPageToken": None}
         while "nextPageToken" in resp:
@@ -127,16 +127,22 @@ class gdrive():
             searchTerms="mimeType contains \"application/vnd.google-apps.folder\""
         )
 
-    def _lsf(self, folder_id, fields="files(id,name,size),nextPageToken"):
+    def _lsf(self, folder_id, fields="files(id,name,size,permissions(role,type)),nextPageToken"):
         return self._ls(
             folder_id,
             fields=fields,
             searchTerms="not mimeType contains \"application/vnd.google-apps.folder\""
         )
 
+    def check_file_shared(self, file_to_check):
+        for permission in file_to_check["permissions"]:
+            if permission["role"] == "reader" and permission["type"] == "anyone":
+                return True
+        return False
+
     def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True):
         for _file in self._lsf(folder_id):
-            dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"]}})
+            dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": check_file_shared(_file)}})
         if recursion:
             for _folder in self._lsd(folder_id):
                 self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist, recursion=recursion)
@@ -179,7 +185,7 @@ class tinfoil_gdrive_generator():
         all_files = {}
         for folder_id in self.folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion)
-        for (file_id, file_details) in all_files.items():
+        for (file_id, file_details, is_shared) in all_files.items():
             check = {}
             share_file = False
             if use_old_url_format:
@@ -188,9 +194,9 @@ class tinfoil_gdrive_generator():
                 check = {"url": "gdrive:/{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote_plus(file_details["name"])), "size": int(file_details["size"])}
             if check not in self.index_json["files"]:
                 self.index_json["files"].append(check)
-                if share_files == "update":
+                if share_files == "update" and not is_shared:
                     share_file = True
-            if not share_file and share_files == "all":
+            if not share_file and share_files == "all" and not is_shared:
                 share_file = True
             if share_file:
                 self.files_to_share.append(file_id)
