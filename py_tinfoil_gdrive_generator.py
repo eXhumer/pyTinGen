@@ -143,7 +143,7 @@ class gdrive():
     def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True):
         for _file in self._lsf(folder_id):
             if "size" in _file:
-                dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": check_file_shared(_file)}})
+                dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": self.check_file_shared(_file)}})
         if recursion:
             for _folder in self._lsd(folder_id):
                 self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist, recursion=recursion)
