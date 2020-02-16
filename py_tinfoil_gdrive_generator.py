@@ -135,9 +135,10 @@ class gdrive():
         )
 
     def check_file_shared(self, file_to_check):
-        for permission in file_to_check["permissions"]:
-            if permission["role"] == "reader" and permission["type"] == "anyone":
-                return True
+        if "permissions" in file_to_check:
+            for permission in file_to_check["permissions"]:
+                if permission["role"] == "reader" and permission["type"] == "anyone":
+                    return True
         return False
 
     def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True):
