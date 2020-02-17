@@ -14,15 +14,22 @@
 
 import requests, json, urllib.parse, sys
 
-def makeRequest(method, url, hdArgs={}, start = None, end = None, accept = '*/*', referer = None):
-	reqHd = {
-		'Accept': accept,
-		'Referer': referer,
-		'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1'
-	}
-	reqHd.update(hdArgs)
-	r = requests.request(method, url, headers=reqHd, verify=False, stream=True)
-	return r
+class GdriveSession:
+	def __init__(self, session_headers={}):
+		self.session = requests.Session()
+		self.session.headers.clear()
+		self.session.cookies.clear()
+		self.session.headers.update({
+			"Accept": "*/*",
+			"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1"
+		})
+		self.session.headers.update(session_headers)
+
+	def make_request(self, method, url, **options):
+		req_headers = {}
+		if options.get("referer", False):
+			req_headers.update({"Referer": options.get("referer")})
+		return self.session.request(method, url, headers=req_headers, verify=False, stream=True)
 
 def getJson(buf):
 	try:
@@ -38,7 +45,7 @@ def getKey(j):
 	except:
 		return ''
 
-def getFiles(id, j):
+def getFiles(id, j, gdrive_session):
 	files = []
 	pageToken = None
 	try:
@@ -48,7 +55,7 @@ def getFiles(id, j):
 			if pageToken is not None:
 				url += '&pageToken=' + pageToken
 
-			r = makeRequest('GET', url, referer = 'https://drive.google.com/open?id=' + id)
+			r = gdrive_session.make_request('GET', url, referer='https://drive.google.com/open?id=' + id)
 
 			j2 = json.loads(r.text)
 			print(j2)
@@ -68,23 +75,22 @@ def getFiles(id, j):
 
 	return files
 
-def processDir(id):
+def processDir(id, gdrive_session):
 	url = 'https://drive.google.com/open?id=' + id
-
-	r = makeRequest('GET', url)
+	r = gdrive_session.make_request('GET', url)
 	j = getJson(r.text)
-	return getFiles(id, j)
+	return getFiles(id, j, gdrive_session)
 
 if __name__ == "__main__":
-	ids = sys.argv[2:]
 	if sys.argv[1] not in ["-h", "--help"]:
-    	fileName = sys.argv[1]
-    
-    	result = {'files': [], 'success': 'hello world'}
-    	for id in ids:
-    		result['files'] += processDir(id)
-    
-    	with open(fileName, 'w') as outfile:
-    		json.dump(result, outfile)
-    else:
-        print("Usage: python3 public_folder_index_generator.py [FOLDER_IDS_TO_SCAN [FOLDER_IDS_TO_SCAN ...]]")
+		fileName = sys.argv[1]
+		ids = sys.argv[2:]
+
+		result = {'files': [], 'success': 'hello world'}
+		for id in ids:
+			result['files'] += processDir(id, GdriveSession())
+
+		with open(fileName, 'w') as outfile:
+			json.dump(result, outfile)
+	else:
+		print("Usage: python3 public_folder_index_generator.py [FOLDER_IDS_TO_SCAN [FOLDER_IDS_TO_SCAN ...]]")
