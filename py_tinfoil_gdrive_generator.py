@@ -183,7 +183,7 @@ class tinfoil_gdrive_generator():
         with open(self.output_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, share_files=None, recursion=True):
+    def index_updater(self, share_files=None, recursion=True, success=None):
         all_files = {}
         for folder_id in self.folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion)
@@ -201,6 +201,8 @@ class tinfoil_gdrive_generator():
         if len(self.files_to_share) > 0:
             for i in tqdm(range(len(self.files_to_share)), desc="File Share Progress"):
                 self.gdrive_service.share_file(self.files_to_share[i])
+        if success is not None:
+            self.index_json.update({"success": success})
         self._update_index_file()
 
 def main():
@@ -216,6 +218,8 @@ def main():
     parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
     parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of the folder, without going through the sub-folders in it.")
+    parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
+
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
