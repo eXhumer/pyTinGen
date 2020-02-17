@@ -77,11 +77,14 @@ def processDir(id):
 
 if __name__ == "__main__":
 	ids = sys.argv[2:]
-	fileName = sys.argv[1]
-
-	result = {'files': [], 'success': 'hello world'}
-	for id in ids:
-		result['files'] += processDir(id)
-
-	with open(fileName, 'w') as outfile:
-		json.dump(result, outfile)
+	if sys.argv[1] not in ["-h", "--help"]:
+    	fileName = sys.argv[1]
+    
+    	result = {'files': [], 'success': 'hello world'}
+    	for id in ids:
+    		result['files'] += processDir(id)
+    
+    	with open(fileName, 'w') as outfile:
+    		json.dump(result, outfile)
+    else:
+        print("Usage: python3 public_folder_index_generator.py [FOLDER_IDS_TO_SCAN [FOLDER_IDS_TO_SCAN ...]]")
