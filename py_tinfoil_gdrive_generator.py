@@ -76,6 +76,7 @@ class gdrive():
             try:
                 response = request.execute()
             except HttpError as error:
+                print(error)
                 _error = error
                 success = False
                 try:
@@ -89,6 +90,7 @@ class gdrive():
                     else:
                         raise error
             except (TransportError, socket.error, socket.timeout) as error:
+                print(error)
                 _error = error
                 success = False
                 retry = True
