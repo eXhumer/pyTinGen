@@ -225,7 +225,7 @@ def main():
 
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
-    generator.index_updater(share_files=args.share_files, recursion=args.recursion)
+    generator.index_updater(share_files=args.share_files, recursion=args.recursion, success=args.success)
     # if args.upload_folder_id:
     #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
     # if args.upload_to_my_drive:
