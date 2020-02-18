@@ -191,7 +191,7 @@ class tinfoil_gdrive_generator():
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion)
         for (file_id, file_details) in all_files.items():
             share_file = False
-            check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe=""), "size": int(file_details["size"])}
+            check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])}
             if check not in self.index_json["files"]:
                 self.index_json["files"].append(check)
                 if share_files == "update" and not file_details["shared"]:
