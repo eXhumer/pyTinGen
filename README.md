@@ -23,7 +23,9 @@ Use the following command to update a `index.json` file (will make file from scr
 Use this flag if you want to share the files that you are going to add to the index file.
 Use `update` if you want to share files that will be newly added to the index file.
 Use `all` if you want to share all the files in the folder IDs that will be passed.
-By default, the script ***does not*** share files. If this flag is not passed or is passed without `update`/`all`, the files will not be shared.
+By default, the script ***does not*** share files.
+If this flag is not passed or is passed without `update`/`all`, the files will not be shared.
+YOU HAVE TO USE THIS FLAG IF YOU DO NOT HAVE OAuth2 TOKEN TINFOIL WITH A SXOS LICENSE (SX LICENSE IS REQUIRED FOR TOKEN TO WORK).
 - `--credentials /path/to/credentials.json`
 Use this flag if you want to specify a custom location for the credentials to use.
 By default, the script will look for a file named `credentials.json` in the working directory.
