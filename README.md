@@ -37,7 +37,9 @@ By default, the script will look for a file named `index.json` in the working di
 Use this flag if you want to encrypt the resulting index file to `/path/to/encrypted_index.json`.
 By default, the script ***will not*** encrypt the resulting index file.
 - `--public-key /path/to/public.key`
-Use this flag if you want to specify a custom public key to encrypt with.  
+Use this flag if you want to specify a custom public key to encrypt with.
+- `--success [SUCCESS_MESSAGE]`
+Use this flag if you want to specify a success message if the index file is loaded successfully with tinfoil.
 By default, the script will look for a file named `public.json` in the working directory if `--encrypt-file` is used.
 - `--disable-recursion`
 Use this flag if you do not want the folder IDs passed to be recursively scanned.
