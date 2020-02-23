@@ -216,7 +216,7 @@ def main():
     parser.add_argument("--share-files", choices=["update", "all"], help="By default, the script only shares files that were newly added. If you want to share old files, use \"all\" instead of \"update\".")
     parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to select the correct account before downloading the credentails file.")
     parser.add_argument("--token", default="token.json", metavar="TOKEN_FILE_PATH", help="File Path of a Google Token file.")
-    parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.json", help="File Path JSON to update.")
+    parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.tfl", help="File Path JSON to update.")
     parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
     parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of the folder, without going through the sub-folders in it.")
