@@ -5,12 +5,12 @@ This project is a based on [this project](https://github.com/BigBrainAFK/tinfoil
 ## Requirements
 
 - Python 3
-- Modules from `requirments.txt` found in the root of project directory.
+- Modules from `requirements.txt` found in the root of project directory.
 - `credentials.json` (or any file name if using `--credentials` flag to pass custom location for the required credential file). It can be obtained from [here](https://developers.google.com/drive/api/v3/quickstart/python)  by clicking the `Enable Drive API` button in there while being signed in with the user account you want to generate credentials for or from Google's Developer Console.
 - Google Drive Folder IDs to scan and index.
 
 Execute the following command in a terminal to install all the required modules.
-`pip3 install -r requirments.txt`
+`pip3 install -r requirements.txt`
 
 ## Simple Usage
 
