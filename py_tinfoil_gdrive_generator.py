@@ -213,13 +213,13 @@ def main():
     # parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id")
     # parser.add_argument("--upload-to-my-drive", action="store_true")
     # parser.add_argument("--upload-to-scan-folders", action="store_true")
-    parser.add_argument("--share-files", choices=["update", "all"], help="By default, the script only shares files that were newly added. If you want to share old files, use \"all\" instead of \"update\".")
+    parser.add_argument("--share-files", choices=["update", "all"], nargs="?", const="update", help="Use this flag if you want to share files that gets newly added to your index file. If you want to share files that was already added to your old index file, use \"--share-files all\"")
     parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to select the correct account before downloading the credentails file.")
     parser.add_argument("--token", default="token.json", metavar="TOKEN_FILE_PATH", help="File Path of a Google Token file.")
-    parser.add_argument("--output-json", metavar="OUTPUT_FILE_PATH", default="index.tfl", help="File Path JSON to update.")
-    parser.add_argument("--encrypt-file", metavar="ENCRYPTED_DB_FILE_PATH", help="File Path to encrypt the output JSON file to.")
-    parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path to Public Key to encrypt with.")
-    parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of the folder, without going through the sub-folders in it.")
+    parser.add_argument("--index-file", metavar="INDEX_FILE_PATH", default="index.tfl", help="File Path for unencrypted index file to update.")
+    parser.add_argument("--encrypt", nargs="?", metavar="ENC_INDEX_FILE_PATH", const="enc_index.tfl", help="Use this flag is you want to encrypt the resulting index file.")
+    parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path for Public Key to encrypt with.")
+    parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of each folder ID passed, without going through the sub-folders in it.")
     parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
 
 
@@ -232,8 +232,8 @@ def main():
     #     generator.gdrive_service.upload_to_my_drive()
     # if args.upload_to_scan_folders and len(args.folder_ids) > 0:
     #     generator.gdrive_service.upload_to_folder(folder_id) for folder_id in args.folder_ids
-    if args.encrypt_file:
-        encrypt_file(args.output_json, args.encrypt_file, public_key=args.public_key)
+    if args.encrypt:
+        encrypt_file(args.output_json, args.encrypt, public_key=args.public_key)
 
 if __name__ == "__main__":
     main()

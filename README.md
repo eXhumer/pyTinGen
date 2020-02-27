@@ -12,41 +12,45 @@ This project is a based on [this project](https://github.com/BigBrainAFK/tinfoil
 Execute the following command in a terminal to install all the required modules.
 `pip3 install -r requirements.txt`
 
-## Simple Usage
+## Usage
+```
+usage: py_tinfoil_gdrive_generator.py [-h] [--share-files [{update,all}]]
+                                      [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH]
+                                      [--index-file INDEX_FILE_PATH] [--encrypt [ENC_INDEX_FILE_PATH]]
+                                      [--public-key PUBLIC_KEY_FILE_PATH] [--disable-recursion]
+                                      [--success SUCCESS_MESSAGE]
+                                      [FOLDER_ID_TO_SCAN [FOLDER_ID_TO_SCAN ...]]
 
-- `python3 py_tinfoil_gdrive_generator.py FOLDER_ID_TO_SCAN [...]`
-Use the following command to update a `index.json` file (will make file from scratch if not found) to use for tinfoil with its new `gdrive:/` protocol with all the files in the folders of all the folder IDs passed.
+Script that will allow you to easily generate a JSON file with Google Drive file links for use with
+Tinfoil.
 
-## Advanced Usage
+positional arguments:
+  FOLDER_ID_TO_SCAN     Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a
+                        time.
 
-- `--share-files {update/all}`
-Use this flag if you want to share the files that you are going to add to the index file.
-Use `update` if you want to share files that will be newly added to the index file.
-Use `all` if you want to share all the files in the folder IDs that will be passed.
-By default, the script ***does not*** share files.
-If this flag is not passed or is passed without `update`/`all`, the files will not be shared.
-YOU HAVE TO USE THIS FLAG IF YOU DO NOT HAVE OAuth2 TOKEN TINFOIL WITH A SXOS LICENSE (SX LICENSE IS REQUIRED FOR TOKEN TO WORK).
-- `--credentials /path/to/credentials.json`
-Use this flag if you want to specify a custom location for the credentials to use.
-By default, the script will look for a file named `credentials.json` in the working directory.
-- `--token /path/to/token.json`
-Use this flag if you want to specify a custom location for the token to use.  
-By default, the script will look for a file named `token.json` in the working directory.
-- `--output-json /path/to/index.json`
-Use this flag if you want to specify a custom location for the output index file.  
-By default, the script will look for a file named `index.json` in the working directory.
-- `--encrypt-file /path/to/encrypted_index.json`
-Use this flag if you want to encrypt the resulting index file to `/path/to/encrypted_index.json`.
-By default, the script will look for a file named `public.json` in the working directory if `--encrypt-file` is used.
-By default, the script ***will not*** encrypt the resulting index file.
-- `--public-key /path/to/public.key`
-Use this flag if you want to specify a custom public key to encrypt with.
-- `--success [SUCCESS_MESSAGE]`
-Use this flag if you want to specify a success message if the index file is loaded successfully with tinfoil.
+optional arguments:
+  -h, --help            show this help message and exit
+  --share-files [{update,all}]
+                        Use this flag if you want to share files that gets newly added to your index
+                        file. If you want to share files that was already added to your old index file,
+                        use "--share-files all"
+  --credentials CREDENTIALS_FILE_NAME
+                        Obtainable from https://developers.google.com/drive/api/v3/quickstart/python.
+                        Make sure to select the correct account before downloading the credentails file.
+  --token TOKEN_FILE_PATH
+                        File Path of a Google Token file.
+  --index-file INDEX_FILE_PATH
+                        File Path for unencrypted index file to update.
+  --encrypt [ENC_INDEX_FILE_PATH]
+                        Use this flag is you want to encrypt the resulting index file.
+  --public-key PUBLIC_KEY_FILE_PATH
+                        File Path for Public Key to encrypt with.
+  --disable-recursion   Use this flag to stop folder IDs entered from being recusively scanned. (It
+                        basically means if you use this flag, the script will only add the files at the
+                        root of each folder ID passed, without going through the sub-folders in it.
+  --success SUCCESS_MESSAGE
+                        Success Message to add to index.
+```
 
-- `--disable-recursion`
-Use this flag if you do not want the folder IDs passed to be recursively scanned.
-- `--use-old-url-format`
-Use this flag if you want to generate links using the old URL method.
 ## Credits
 [BigBrainAFK](https://github.com/BigBrainAFK/) for Crypto Stuff.
