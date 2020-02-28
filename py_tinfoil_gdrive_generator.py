@@ -164,15 +164,15 @@ class gdrive():
     #     pass
 
 class tinfoil_gdrive_generator():
-    def __init__(self, folder_ids, credentials_path="credentials.json", token_path="token.json", output_path="index.json"):
+    def __init__(self, folder_ids, credentials_path="credentials.json", token_path="token.json", index_path="index.tfl"):
         self.folder_ids = folder_ids
-        self.output_path = output_path
+        self.index_path = index_path
         self.files_to_share = []
         self.gdrive_service = gdrive(token_path=token_path, 
         credentials_path=credentials_path)
         self.index_json = {}
-        if Path(self.output_path).is_file():
-            with open(self.output_path, "r") as index_json:
+        if Path(self.index_path).is_file():
+            with open(self.index_path, "r") as index_json:
                 try:
                     self.index_json = json.loads(index_json.read())
                 except json.JSONDecodeError:
@@ -182,7 +182,7 @@ class tinfoil_gdrive_generator():
             self._update_index_file()
 
     def _update_index_file(self):
-        with open(self.output_path, "w") as output_file:
+        with open(self.index_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
     def index_updater(self, share_files=None, recursion=True, success=None):
@@ -224,7 +224,7 @@ def main():
 
 
     args = parser.parse_args()
-    generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, output_path=args.output_json)
+    generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, index_path=args.index_file)
     generator.index_updater(share_files=args.share_files, recursion=args.recursion, success=args.success)
     # if args.upload_folder_id:
     #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
@@ -233,7 +233,7 @@ def main():
     # if args.upload_to_scan_folders and len(args.folder_ids) > 0:
     #     generator.gdrive_service.upload_to_folder(folder_id) for folder_id in args.folder_ids
     if args.encrypt:
-        encrypt_file(args.output_json, args.encrypt, public_key=args.public_key)
+        encrypt_file(args.index_file, args.encrypt, public_key=args.public_key)
 
 if __name__ == "__main__":
     main()
