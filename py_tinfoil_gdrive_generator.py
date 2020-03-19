@@ -141,13 +141,16 @@ class gdrive():
                     return True
         return False
 
-    def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True):
+    def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True, pbar=None):
         for _file in self._lsf(folder_id):
             if "size" in _file:
                 dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": self.check_file_shared(_file)}})
+                if pbar:
+                    pbar.update(1)
+                
         if recursion:
             for _folder in self._lsd(folder_id):
-                self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist, recursion=recursion)
+                self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist, recursion=recursion, pbar=pbar)
 
     def share_file(self, file_id_to_share):
         self._apicall(self.drive_service.permissions().create(fileId=file_id_to_share, supportsAllDrives=True, body={
@@ -183,10 +186,12 @@ class tinfoil_gdrive_generator():
         with open(self.index_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, share_files=None, recursion=True, success=None):
+    def index_updater(self, share_files=None, recursion=True, success=None, pbar=None):
         all_files = {}
         for folder_id in self.folder_ids:
-            self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion)
+            self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion, pbar=pbar)
+        if pbar:
+            pbar.close()
         for (file_id, file_details) in all_files.items():
             share_file = False
             check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])}
@@ -220,10 +225,10 @@ def main():
     parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of each folder ID passed, without going through the sub-folders in it.")
     parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
 
-
+    files_pbar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, index_path=args.index_file)
-    generator.index_updater(share_files=args.share_files, recursion=args.recursion, success=args.success)
+    generator.index_updater(share_files=args.share_files, recursion=args.recursion, success=args.success, pbar=files_pbar)
     # if args.upload_folder_id:
     #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
     # if args.upload_to_my_drive:
