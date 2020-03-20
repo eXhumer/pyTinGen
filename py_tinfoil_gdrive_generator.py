@@ -139,10 +139,13 @@ class gdrive():
         if "permissionIds" in file_to_check:
             for permissionId in file_to_check["permissionIds"]:
                 if permissionId[-1] == "k" and permissionId[:-1].isnumeric():
-                    pass # TODO - NEED TO DELETE PERMISSION AS THIS PERMISSION-ID CAN CAUSE ISSUES
+                    self.delete_file_permission(file_to_check["id"], permissionId)
                 if permissionId == "anyoneWithLink":
                     shared = True
         return shared
+
+    def delete_file_permission(self, file_id, permission_id):
+        self._apicall(self.drive_service.permissions().delete(fileId=file_id, permissionId=permission_id, supportsAllDrives=True))
 
     def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True, pbar=None):
         for _file in self._lsf(folder_id):
