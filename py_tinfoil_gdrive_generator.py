@@ -145,7 +145,7 @@ class gdrive():
         for _file in self._lsf(folder_id):
             if "size" in _file:
                 dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": self.check_file_shared(_file)}})
-                if pbar:
+                if pbar != None:
                     pbar.update(1)
                 
         if recursion:
@@ -190,7 +190,7 @@ class tinfoil_gdrive_generator():
         all_files = {}
         for folder_id in self.folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion, pbar=pbar)
-        if pbar:
+        if pbar != None:
             pbar.close()
         for (file_id, file_details) in all_files.items():
             share_file = False
