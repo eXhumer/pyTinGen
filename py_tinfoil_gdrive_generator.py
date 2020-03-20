@@ -127,7 +127,7 @@ class gdrive():
             searchTerms="mimeType contains \"application/vnd.google-apps.folder\""
         )
 
-    def _lsf(self, folder_id, fields="files(id,name,size,permissions(role,type)),nextPageToken"):
+    def _lsf(self, folder_id, fields="files(id,name,size,permissionIds),nextPageToken"):
         return self._ls(
             folder_id,
             fields=fields,
@@ -135,11 +135,14 @@ class gdrive():
         )
 
     def check_file_shared(self, file_to_check):
-        if "permissions" in file_to_check:
-            for permission in file_to_check["permissions"]:
-                if permission["role"] == "reader" and permission["type"] == "anyone":
-                    return True
-        return False
+        shared = False
+        if "permissionIds" in file_to_check:
+            for permissionId in file_to_check["permissionIds"]:
+                if permissionId[-1] == "k" and permissionId[:-1].isnumeric():
+                    pass # TODO - NEED TO DELETE PERMISSION AS THIS PERMISSION-ID CAN CAUSE ISSUES
+                if permissionId == "anyoneWithLink":
+                    shared = True
+        return shared
 
     def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True, pbar=None):
         for _file in self._lsf(folder_id):
