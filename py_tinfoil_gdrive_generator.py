@@ -106,7 +106,7 @@ class gdrive():
                 raise Exception("Unretryable Error")
         return response
 
-    def _ls(self, folder_id, fields="files(id,name,size,permissions(role,type)),nextPageToken", searchTerms=""):
+    def _ls(self, folder_id, fields="files(id,name,size,permissionIds),nextPageToken", searchTerms=""):
         files = []
         resp = {"nextPageToken": None}
         while "nextPageToken" in resp:
