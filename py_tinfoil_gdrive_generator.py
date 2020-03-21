@@ -18,6 +18,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google.auth.exceptions import TransportError
 from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.http import MediaFileUpload
 from pathlib import Path
 from tqdm import tqdm
 from _crypto import encrypt_file
@@ -158,11 +159,16 @@ class gdrive():
             "type": "anyone"
         }))
 
-    # def upload_to_my_drive(self):
-    #     pass
+    def upload_file(self, file_path, dest_folder_id=None):
+        media = MediaFileUpload(file_path)
+        if dest_folder_id is None:
+            response = self._apicall(self.drive_service.files().create(media_body=media, supportsAllDrives=True))
+        else:
+            response = self._apicall(self.drive_service.files().create(media_body=media, body={"parents": [dest_folder_id]}, supportsAllDrives=True))
 
-    # def upload_to_folder(self, folder_id_to_upload_to):
-    #     pass
+        if "id" in response:
+            self.share_file(response["id"])
+            print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
 
 class tinfoil_gdrive_generator():
     def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False):
@@ -213,9 +219,8 @@ class tinfoil_gdrive_generator():
 def main():
     parser = argparse.ArgumentParser(description="Script that will allow you to easily generate a JSON file with Google Drive file links for use with Tinfoil.")
     parser.add_argument(nargs="*", metavar="FOLDER_ID_TO_SCAN", dest="folder_ids", help="Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a time.")
-    # parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id")
-    # parser.add_argument("--upload-to-my-drive", action="store_true")
-    # parser.add_argument("--upload-to-scan-folders", action="store_true")
+    parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied.")
+    parser.add_argument("--upload-to-my-drive", action="store_true", help="Upload resulting index to My Drive")
     parser.add_argument("--share-files", choices=["update", "all"], nargs="?", const="update", help="Use this flag if you want to share files that gets newly added to your index file. If you want to share files that was already added to your old index file, use \"--share-files all\"")
     parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to select the correct account before downloading the credentails file.")
     parser.add_argument("--token", default="gdrive.token", metavar="TOKEN_FILE_PATH", help="File Path of a Google Token file.")
@@ -229,14 +234,17 @@ def main():
     args = parser.parse_args()
     generator = tinfoil_gdrive_generator(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index)
     generator.index_updater(args.folder_ids, share_files=args.share_files, recursion=args.recursion, success=args.success)
-    # if args.upload_folder_id:
-    #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
-    # if args.upload_to_my_drive:
-    #     generator.gdrive_service.upload_to_my_drive()
-    # if args.upload_to_scan_folders and len(args.folder_ids) > 0:
-    #     generator.gdrive_service.upload_to_folder(folder_id) for folder_id in args.folder_ids
+
+    upload_file = args.index_file
+
     if args.encrypt:
         encrypt_file(args.index_file, args.encrypt, public_key=args.public_key)
+        upload_file = args.encrypt
+
+    if args.upload_folder_id:
+        generator.gdrive_service.upload_file(upload_file, args.upload_folder_id)
+    if args.upload_to_my_drive:
+        generator.gdrive_service.upload_file(upload_file)
 
 if __name__ == "__main__":
     main()
