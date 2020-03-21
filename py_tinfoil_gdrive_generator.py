@@ -31,7 +31,7 @@ class gdrive():
     def _cred_to_json(self, cred_to_pass):
         cred_json = {
             'access_token': cred_to_pass.token,
-            'refresh_token': cred_to_pass.refresh_token,
+            'refresh_token': cred_to_pass.refresh_token
         }
         return cred_json
 
