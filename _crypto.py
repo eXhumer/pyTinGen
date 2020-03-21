@@ -27,6 +27,7 @@ from binascii import hexlify as hx, unhexlify as uhx
 import random
 import Crypto.Hash
 import zlib
+import pathlib
 
 def encrypt_file(input, output, public_key="public.key"):
     pubKey = RSA.importKey(open(public_key).read())
@@ -47,6 +48,7 @@ def encrypt_file(input, output, public_key="public.key"):
 
     print(aesKey)
 
+    pathlib.Path(output).parent.resolve().mkdir(exist_ok=True, parents=True)
     with open(output, 'wb') as f:
         f.write(b'TINFOIL\xFE')
         f.write(wrapKey(aesKey))
