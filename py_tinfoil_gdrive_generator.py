@@ -182,6 +182,7 @@ class tinfoil_gdrive_generator():
             self._update_index_file()
 
     def _update_index_file(self):
+        Path(self.index_path).parent.resolve().mkdir(parents=True, exist_ok=True)
         with open(self.index_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
