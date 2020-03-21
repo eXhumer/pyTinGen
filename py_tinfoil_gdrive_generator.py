@@ -31,24 +31,29 @@ class gdrive():
     def _cred_to_json(self, cred_to_pass):
         cred_json = {
             'access_token': cred_to_pass.token,
-            'refresh_token': cred_to_pass.refresh_token
+            'refresh_token': cred_to_pass.refresh_token,
         }
         return cred_json
 
-    def _json_to_cred(self, json_to_pass):
+    def _json_to_cred(self, json_to_pass, client_id, client_secret):
         cred_json = json.load(json_to_pass)
         creds = Credentials(
             cred_json['access_token'],
-            refresh_token=cred_json['refresh_token']
+            refresh_token=cred_json['refresh_token'],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=client_id,
+            client_secret=client_secret
         )
         return creds
 
     def _get_creds(self, credentials="credentials.json", token="gdrive.token", scopes=['https://www.googleapis.com/auth/drive']):
         if Path(credentials).is_file():
+            with open(credentials, "r") as c:
+                cred_json = json.load(c)
             creds = None
             if Path(token).is_file():
                 with open(token, "r") as t:
-                    creds = self._json_to_cred(t)
+                    creds = self._json_to_cred(t, cred_json["installed"]["client_id"], cred_json["installed"]["client_secret"])
             if not creds or not creds.valid:
                 if creds and creds.expired and creds.refresh_token:
                     creds.refresh(Request())
