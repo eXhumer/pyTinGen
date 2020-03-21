@@ -162,9 +162,9 @@ class gdrive():
     def upload_file(self, file_path, dest_folder_id=None):
         media = MediaFileUpload(file_path)
         if dest_folder_id is None:
-            response = self._apicall(self.drive_service.files().create(media_body=media, supportsAllDrives=True))
+            response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
         else:
-            response = self._apicall(self.drive_service.files().create(media_body=media, body={"parents": [dest_folder_id]}, supportsAllDrives=True))
+            response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name, "parents": [dest_folder_id]}, supportsAllDrives=True))
 
         if "id" in response:
             self.share_file(response["id"])
