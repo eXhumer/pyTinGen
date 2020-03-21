@@ -61,14 +61,12 @@ class gdrive():
 
     def _apicall(self, request, maximum_backoff=32):
         sleep_exponent_count = 0
-        _error = None
         while True:
             success = True
             retry = False
             try:
                 response = request.execute()
             except HttpError as error:
-                _error = error
                 success = False
                 try:
                     error_details = json.loads(error.content.decode("utf-8"))["error"]
@@ -81,7 +79,6 @@ class gdrive():
                     else:
                         raise error
             except (TransportError, socket.error, socket.timeout) as error:
-                _error = error
                 success = False
                 retry = True
             if success:
