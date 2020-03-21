@@ -160,14 +160,13 @@ class gdrive():
     #     pass
 
 class tinfoil_gdrive_generator():
-    def __init__(self, folder_ids, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl"):
-        self.folder_ids = folder_ids
+    def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False):
         self.index_path = index_path
         self.files_to_share = []
         self.gdrive_service = gdrive(token_path=token_path, 
         credentials_path=credentials_path)
         self.index_json = {}
-        if Path(self.index_path).is_file():
+        if Path(self.index_path).is_file() and not regenerate_index:
             with open(self.index_path, "r") as index_json:
                 try:
                     self.index_json = json.loads(index_json.read())
@@ -181,10 +180,10 @@ class tinfoil_gdrive_generator():
         with open(self.index_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, share_files=None, recursion=True, success=None):
+    def index_updater(self, folder_ids, share_files=None, recursion=True, success=None):
         files_pbar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
         all_files = {}
-        for folder_id in self.folder_ids:
+        for folder_id in folder_ids:
             self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion, files_pbar=files_pbar)
         files_pbar.close()
         for (file_id, file_details) in all_files.items():
@@ -219,10 +218,11 @@ def main():
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path for Public Key to encrypt with.")
     parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of each folder ID passed, without going through the sub-folders in it.")
     parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
+    parser.add_argument("--regenerate-index", action="store_true", help="Use this flag if you want to regenrate the index file from scratch instead of appending to old index file.")
 
     args = parser.parse_args()
-    generator = tinfoil_gdrive_generator(args.folder_ids, token_path=args.token, credentials_path=args.credentials, index_path=args.index_file)
-    generator.index_updater(share_files=args.share_files, recursion=args.recursion, success=args.success)
+    generator = tinfoil_gdrive_generator(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index)
+    generator.index_updater(args.folder_ids, share_files=args.share_files, recursion=args.recursion, success=args.success)
     # if args.upload_folder_id:
     #     generator.gdrive_service.upload_to_folder(args.upload_folder_id)
     # if args.upload_to_my_drive:
