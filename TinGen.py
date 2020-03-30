@@ -21,10 +21,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.http import MediaFileUpload
 from pathlib import Path
 from tqdm import tqdm
-from _crypto import encrypt_file
+from CryptoHelpers import encrypt_file
 import socket, json, argparse, urllib.parse, time
 
-class GDrive():
+class GDrive:
     def __init__(self, token_path, credentials_path):
         credentials = self._get_creds(credentials=credentials_path, token=token_path)
         self.drive_service = google_api_build("drive", "v3", credentials=credentials)
@@ -170,7 +170,7 @@ class GDrive():
             self.share_file(response["id"])
             print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
 
-class TinGen():
+class TinGen:
     def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False):
         self.index_path = index_path
         self.files_to_share = []
@@ -215,8 +215,8 @@ class TinGen():
             self.index_json.update({"success": success})
         self._update_index_file()
 
-def main():
-    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate a JSON file with Google Drive file links for use with Tinfoil.")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate an index file with Google Drive file links for use with Tinfoil.")
     parser.add_argument(nargs="*", metavar="FOLDER_ID_TO_SCAN", dest="folder_ids", help="Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a time.")
     parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied.")
     parser.add_argument("--upload-to-my-drive", action="store_true", help="Upload resulting index to My Drive")
@@ -244,6 +244,3 @@ def main():
         generator.gdrive_service.upload_file(upload_file, args.upload_folder_id)
     if args.upload_to_my_drive:
         generator.gdrive_service.upload_file(upload_file)
-
-if __name__ == "__main__":
-    main()
