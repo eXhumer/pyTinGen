@@ -24,7 +24,7 @@ from tqdm import tqdm
 from _crypto import encrypt_file
 import socket, json, argparse, urllib.parse, time
 
-class gdrive():
+class GDrive():
     def __init__(self, token_path, credentials_path):
         credentials = self._get_creds(credentials=credentials_path, token=token_path)
         self.drive_service = google_api_build("drive", "v3", credentials=credentials)
@@ -170,12 +170,11 @@ class gdrive():
             self.share_file(response["id"])
             print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
 
-class tinfoil_gdrive_generator():
+class TinGen():
     def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False):
         self.index_path = index_path
         self.files_to_share = []
-        self.gdrive_service = gdrive(token_path=token_path, 
-        credentials_path=credentials_path)
+        self.gdrive_service = GDrive(token_path=token_path, credentials_path=credentials_path)
         self.index_json = {}
         if Path(self.index_path).is_file() and not regenerate_index:
             with open(self.index_path, "r") as index_json:
@@ -232,7 +231,7 @@ def main():
     parser.add_argument("--regenerate-index", action="store_true", help="Use this flag if you want to regenrate the index file from scratch instead of appending to old index file.")
 
     args = parser.parse_args()
-    generator = tinfoil_gdrive_generator(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index)
+    generator = TinGen(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index)
     generator.index_updater(args.folder_ids, share_files=args.share_files, recursion=args.recursion, success=args.success)
 
     upload_file = args.index_file
