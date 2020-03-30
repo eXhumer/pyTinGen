@@ -22,7 +22,7 @@ from googleapiclient.http import MediaFileUpload
 from pathlib import Path
 from tqdm import tqdm
 from CryptoHelpers import encrypt_file
-import socket, json, argparse, urllib.parse, time
+import socket, json, argparse, urllib.parse, time, re
 
 class GDrive:
     def __init__(self, token_path, credentials_path):
@@ -191,7 +191,7 @@ class TinGen:
         with open(self.index_path, "w") as output_file:
             json.dump(self.index_json, output_file, indent=2)
 
-    def index_updater(self, folder_ids, share_files=None, recursion=True, success=None):
+    def index_updater(self, folder_ids, share_files=None, recursion=True, success=None, allow_files_without_tid=False):
         files_pbar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
         all_files = {}
         for folder_id in folder_ids:
@@ -199,15 +199,16 @@ class TinGen:
         files_pbar.close()
         for (file_id, file_details) in all_files.items():
             share_file = False
-            check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])}
-            if check not in self.index_json["files"]:
-                self.index_json["files"].append(check)
-                if share_files == "update" and not file_details["shared"]:
+            if allow_files_without_tid or re.match(r"\[[0-9A-Fa-f]{16}\]", urllib.parse.quote(file_details["name"], safe="")):
+                check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])}
+                if check not in self.index_json["files"]:
+                    self.index_json["files"].append(check)
+                    if share_files == "update" and not file_details["shared"]:
+                        share_file = True
+                if not share_file and share_files == "all" and not file_details["shared"]:
                     share_file = True
-            if not share_file and share_files == "all" and not file_details["shared"]:
-                share_file = True
-            if share_file:
-                self.files_to_share.append(file_id)
+                if share_file:
+                    self.files_to_share.append(file_id)
         if len(self.files_to_share) > 0:
             for i in tqdm(range(len(self.files_to_share)), desc="File Share Progress"):
                 self.gdrive_service.share_file(self.files_to_share[i])

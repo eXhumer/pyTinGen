@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests, json, urllib.parse, sys, argparse, urllib3
+import requests, json, urllib.parse, sys, argparse, urllib3, re
 from pathlib import Path
 from tqdm import tqdm
 from CryptoHelpers import encrypt_file
@@ -88,10 +88,11 @@ class UTinGen:
 		with open(self.index_path, "w") as output_file:
 			json.dump(self.index_json, output_file, indent=2)
 
-	def index_folders(self, folder_ids, success=None):
+	def index_folders(self, folder_ids, success=None, allow_files_without_tid=False):
 		for folder_id in folder_ids:
 			for (file_id, file_details) in self.gdrive_service.get_files_in_folder_id(folder_id).items():
-				self.index_json["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])})
+				if allow_files_without_tid or re.match(r"\[[0-9A-Fa-f]{16}\]", urllib.parse.quote(file_details["name"], safe="")):
+					self.index_json["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])})
 		if success is not None:
 			self.index_json.update({"success": success})
 		self.write_index_to_file()
