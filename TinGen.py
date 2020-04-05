@@ -199,7 +199,7 @@ class TinGen:
         files_pbar.close()
         for (file_id, file_details) in all_files.items():
             share_file = False
-            if allow_files_without_tid or re.match(r"\[[0-9A-Fa-f]{16}\]", urllib.parse.quote(file_details["name"], safe="")):
+            if allow_files_without_tid or re.search(r"\%5B[0-9A-Fa-f]{16}\%5D", urllib.parse.quote(file_details["name"], safe="")):
                 check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])}
                 if check not in self.index_json["files"]:
                     self.index_json["files"].append(check)

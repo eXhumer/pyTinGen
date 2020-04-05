@@ -91,7 +91,7 @@ class UTinGen:
 	def index_folders(self, folder_ids, success=None, allow_files_without_tid=False):
 		for folder_id in folder_ids:
 			for (file_id, file_details) in self.gdrive_service.get_files_in_folder_id(folder_id).items():
-				if allow_files_without_tid or re.match(r"\[[0-9A-Fa-f]{16}\]", urllib.parse.quote(file_details["name"], safe="")):
+				if allow_files_without_tid or re.search(r"\%5B[0-9A-Fa-f]{16}\%5D", urllib.parse.quote(file_details["name"], safe="")):
 					self.index_json["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])})
 		if success is not None:
 			self.index_json.update({"success": success})
