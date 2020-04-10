@@ -25,8 +25,8 @@ from CryptoHelpers import encrypt_file
 import socket, json, argparse, urllib.parse, time, re
 
 class GDrive:
-    def __init__(self, token_path, credentials_path):
-        credentials = self._get_creds(credentials=credentials_path, token=token_path)
+    def __init__(self, token_path, credentials_path, headless=False):
+        credentials = self._get_creds(credentials=credentials_path, token=token_path, headless=headless)
         self.drive_service = google_api_build("drive", "v3", credentials=credentials)
 
     def _cred_to_json(self, cred_to_pass):
@@ -47,7 +47,7 @@ class GDrive:
         )
         return creds
 
-    def _get_creds(self, credentials="credentials.json", token="gdrive.token", scopes=['https://www.googleapis.com/auth/drive']):
+    def _get_creds(self, credentials="credentials.json", token="gdrive.token", scopes=['https://www.googleapis.com/auth/drive'], headless=False):
         if Path(credentials).is_file():
             with open(credentials, "r") as c:
                 cred_json = json.load(c)
@@ -60,7 +60,10 @@ class GDrive:
                     creds.refresh(Request())
                 else:
                     flow = InstalledAppFlow.from_client_secrets_file(credentials, scopes)
-                    creds = flow.run_local_server(port=0)
+                    if headless:
+                        creds = flow.run_console()
+                    else:
+                        creds = flow.run_local_server(port=0)
                 with open(token, "w") as t:
                     json.dump(self._cred_to_json(creds), t, indent=2)
             return creds
@@ -171,7 +174,7 @@ class GDrive:
             print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
 
 class TinGen:
-    def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False):
+    def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False, headless=False):
         self.index_path = index_path
         self.files_to_share = []
         self.gdrive_service = GDrive(token_path=token_path, credentials_path=credentials_path)
@@ -230,9 +233,10 @@ if __name__ == "__main__":
     parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of each folder ID passed, without going through the sub-folders in it.")
     parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
     parser.add_argument("--regenerate-index", action="store_true", help="Use this flag if you want to regenrate the index file from scratch instead of appending to old index file.")
+    parser.add_argument("--headless", action="store_true", help="Use this flag if you want to use the script in a headless environment.")
 
     args = parser.parse_args()
-    generator = TinGen(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index)
+    generator = TinGen(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index, headless=args.headless)
     generator.index_updater(args.folder_ids, share_files=args.share_files, recursion=args.recursion, success=args.success)
 
     upload_file = args.index_file
