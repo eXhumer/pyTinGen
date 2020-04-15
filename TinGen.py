@@ -179,40 +179,34 @@ class GDrive:
             "type": "anyone"
         }))
 
-    def upload_file(self, file_path, dest_folder_id, new_upload_id):
+    def upload_file(self, file_path, dest_folder_id, share_index, new_upload_id):
         existing_file_id = None
 
-        if dest_folder_id:
-            for _file in self._lsf(dest_folder_id):
-                if _file["name"] == Path(file_path).name:
-                    print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
-                    existing_file_id = _file["id"]
-                    break
-        else:
-            for _file in self._lsf_my_drive():
-                if _file["name"] == Path(file_path).name:
-                    print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
-                    existing_file_id = _file["id"]
-                    break
+        root_files = self._lsf(dest_folder_id) if dest_folder_id else self._lsf_my_drive()
+
+        for _file in root_files:
+            if _file["name"] == Path(file_path).name:
+                print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
+                existing_file_id = _file["id"]
+                break
 
         if existing_file_id is not None and new_upload_id:
             existing_file_id = None
 
         media = MediaFileUpload(file_path)
 
-        if dest_folder_id is None:
-            if existing_file_id:
-                response = self._apicall(self.drive_service.files().update(fileId=existing_file_id, media_body=media))
+        if existing_file_id:
+            response = self._apicall(self.drive_service.files().update(fileId=existing_file_id, media_body=media, supportsAllDrives=True))
+        else:
+            if dest_folder_id:
+                response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name, "parents": [dest_folder_id]}, supportsAllDrives=True))
             else:
                 response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
-        else:
-            if existing_file_id:
-                response = self._apicall(self.drive_service.files().update(fileId=existing_file_id, media_body=media))
-            else:
-                response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name, "parents": [dest_folder_id]}, supportsAllDrives=True))
 
         if "id" in response:
-            self.share_file(response["id"])
+            if share_index:
+                print(f"Sharing {Path(file_path).name}")
+                self.share_file(response["id"])
             print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
 
 
@@ -259,7 +253,7 @@ class TinGen:
     def share_index_files(self):
         """Share files in index. Does nothing for files already shared."""
         for file_entry in tqdm(self.index["files"], desc="File Share Progress", unit="file", unit_scale=True):
-            entry_file_id = file_entry["url"](":")[1].split("#")[0]
+            entry_file_id = file_entry["url"].split(":")[1].split("#")[0]
             if not self.files_shared_status.get(entry_file_id):
                 self.gdrive_service.share_file(entry_file_id)
 
@@ -299,6 +293,7 @@ if __name__ == "__main__":
     parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied")
     parser.add_argument("--upload-to-my-drive", action="store_true", help="Upload resulting index to My Drive")
     parser.add_argument("--new-upload-id", action="store_true", help="Uploads the newly generated index file with a new file ID instead of replacing old one")
+    parser.add_argument("--share-uploaded-index", action="store_true", help="Shares the index file that is uploaded to Google Drive")
 
     args = parser.parse_args()
     generator = TinGen(args.token, args.credentials, args.headless)
@@ -328,11 +323,11 @@ if __name__ == "__main__":
     if args.upload_folder_id:
         file_to_upload = args.index_file if not args.encrypt else args.encrypt
         print(f"Uploading {file_to_upload} to {args.upload_folder_id}")
-        generator.gdrive_service.upload_file(file_to_upload, args.upload_folder_id, args.new_upload_id)
+        generator.gdrive_service.upload_file(file_to_upload, args.upload_folder_id, args.share_uploaded_index, args.new_upload_id)
 
     if args.upload_to_my_drive:
         file_to_upload = args.index_file if not args.encrypt else args.encrypt
         print(f"Uploading {file_to_upload} to \"My Drive\"")
-        generator.gdrive_service.upload_file(file_to_upload, None, args.new_upload_id)
+        generator.gdrive_service.upload_file(file_to_upload, None, args.share_uploaded_index, args.new_upload_id)
 
     print(f"Index Generation Complete")

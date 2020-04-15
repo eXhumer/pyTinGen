@@ -15,14 +15,16 @@ Execute the following command in a terminal to install all the required modules.
 
 ## Usage
 ```
-usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH] [--headless]
-                 [--index-file INDEX_FILE_PATH] [--update-mode] [--share-files] [--no-recursion]
-                 [--add-nsw-files-without-title-id] [--add-non-nsw-files] [--success SUCCESS_MESSAGE]
-                 [--encrypt [ENC_INDEX_FILE_PATH]] [--public-key PUBLIC_KEY_FILE_PATH]
-                 [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive] [--new-upload-id]
+usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH]
+                 [--headless] [--index-file INDEX_FILE_PATH] [--update-mode] [--share-files]
+                 [--no-recursion] [--add-nsw-files-without-title-id] [--add-non-nsw-files]
+                 [--success SUCCESS_MESSAGE] [--encrypt [ENC_INDEX_FILE_PATH]]
+                 [--public-key PUBLIC_KEY_FILE_PATH] [--upload-to-folder-id UPLOAD_FOLDER_ID]
+                 [--upload-to-my-drive] [--new-upload-id] [--share-uploaded-index]
                  [FOLDER_ID_TO_SCAN [FOLDER_ID_TO_SCAN ...]]
 
-Script that will allow you to generate an index file with Google Drive file links for use with Tinfoil
+Script that will allow you to generate an index file with Google Drive file links for use with
+Tinfoil
 
 positional arguments:
   FOLDER_ID_TO_SCAN     Folder IDs of Google Drive folders to scan
@@ -44,8 +46,8 @@ optional arguments:
                         Adds files without title ID
   --add-non-nsw-files   Adds files without valid NSW ROM extension(NSP/NSZ/XCI/XCZ) to index
   --success SUCCESS_MESSAGE
-                        Adds a success message to index file to show if index is successfully read by
-                        tinfoil
+                        Adds a success message to index file to show if index is successfully
+                        read by tinfoil
   --encrypt [ENC_INDEX_FILE_PATH]
                         Encrypts the resulting index file
   --public-key PUBLIC_KEY_FILE_PATH
@@ -53,8 +55,10 @@ optional arguments:
   --upload-to-folder-id UPLOAD_FOLDER_ID
                         Upload resulting index to folder id supplied
   --upload-to-my-drive  Upload resulting index to My Drive
-  --new-upload-id       Uploads the newly generated index file to with a new file ID instead of
+  --new-upload-id       Uploads the newly generated index file with a new file ID instead of
                         replacing old one
+  --share-uploaded-index
+                        Shares the index file that is uploaded to Google Drive
 ```
 
 ## Credits
