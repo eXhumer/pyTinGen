@@ -24,8 +24,9 @@ from tqdm import tqdm
 from CryptoHelpers import encrypt_file
 import socket, json, argparse, urllib.parse, time, re
 
+
 class GDrive:
-    def __init__(self, token_path, credentials_path, headless=False):
+    def __init__(self, token_path: str, credentials_path: str, headless: bool):
         credentials = self._get_creds(credentials=credentials_path, token=token_path, headless=headless)
         self.drive_service = google_api_build("drive", "v3", credentials=credentials)
 
@@ -145,16 +146,19 @@ class GDrive:
     def delete_file_permission(self, file_id, permission_id):
         self._apicall(self.drive_service.permissions().delete(fileId=file_id, permissionId=permission_id, supportsAllDrives=True))
 
-    def get_all_files_in_folder(self, folder_id, dict_files, dict_blacklist, recursion=True, files_pbar=None):
+    def get_all_files_in_folder(self, folder_id: str, recursion: bool, progress_bar: tqdm) -> dict:
+        files = {}
+
         for _file in self._lsf(folder_id):
             if "size" in _file:
-                dict_files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": self.check_file_shared(_file)}})
-                if files_pbar is not None:
-                    files_pbar.update(1)
+                files.update({_file["id"]: {"size": _file["size"], "name": _file["name"], "shared": self.check_file_shared(_file)}})
+                progress_bar.update(1)
                 
         if recursion:
             for _folder in self._lsd(folder_id):
-                self.get_all_files_in_folder(_folder["id"], dict_files, dict_blacklist, recursion=recursion, files_pbar=files_pbar)
+                files.update(self.get_all_files_in_folder(_folder["id"], recursion, progress_bar))
+
+        return files
 
     def share_file(self, file_id_to_share):
         self._apicall(self.drive_service.permissions().create(fileId=file_id_to_share, supportsAllDrives=True, body={
@@ -162,90 +166,147 @@ class GDrive:
             "type": "anyone"
         }))
 
-    def upload_file(self, file_path, dest_folder_id=None):
+    def upload_file(self, file_path, dest_folder_id, new_upload_id):
+        existing_file_id = None
+
+        for _file in self._lsf(dest_folder_id):
+            if not new_upload_id or _file["name"] == Path(file_path).name:
+                print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
+                existing_file_id = _file["id"]
+                break
+
         media = MediaFileUpload(file_path)
         if dest_folder_id is None:
-            response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
+            if existing_file_id:
+                response = self._apicall(self.drive_service.files().update(existing_file_id, media_body=media, supportsAllDrives=True))
+            else:
+                response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
         else:
-            response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name, "parents": [dest_folder_id]}, supportsAllDrives=True))
+            if existing_file_id:
+                response = self._apicall(self.drive_service.files().update(existing_file_id, media_body=media, supportsAllDrives=True))
+            else:
+                response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name, "parents": [dest_folder_id]}, supportsAllDrives=True))
 
         if "id" in response:
             self.share_file(response["id"])
             print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
 
+
 class TinGen:
-    def __init__(self, credentials_path="credentials.json", token_path="gdrive.token", index_path="index.tfl", regenerate_index=False, headless=False):
-        self.index_path = index_path
-        self.files_to_share = []
-        self.gdrive_service = GDrive(token_path=token_path, credentials_path=credentials_path)
-        self.index_json = {}
-        if Path(self.index_path).is_file() and not regenerate_index:
-            with open(self.index_path, "r") as index_json:
+    def __init__(self, credentials_path: str, token_path: str, headless: bool):
+        self.gdrive_service = GDrive(token_path, credentials_path, headless)
+        self.files_shared_status = {}
+        self.index = {"files": []}
+
+    def read_index(self, index_path):
+        """Reads index file and updates the index for the instance."""
+        pathlib_index = Path(index_path)
+        if pathlib_index.exists() and pathlib_index.is_file():
+            with open(pathlib_index, "r") as index_fp:
                 try:
-                    self.index_json = json.loads(index_json.read())
+                    file_json = json.load(index_fp)
+                    if "files" in file_json:
+                        for file_entry in file_json["files"]:
+                            if file_entry not in self.index["files"]:
+                                self.index["files"].append(file_entry)
                 except json.JSONDecodeError:
-                    raise Exception("Error while trying to read the index json file. Make sure that it is a valid JSON file.")
-        if "files" not in self.index_json:
-            self.index_json.update({"files": []})
-            self._update_index_file()
+                    print(f"WARNING: {pathlib_index} is not a valid JSON file.")
 
-    def _update_index_file(self):
-        Path(self.index_path).parent.resolve().mkdir(parents=True, exist_ok=True)
-        with open(self.index_path, "w") as output_file:
-            json.dump(self.index_json, output_file, indent=2)
+    def write_index_to_file(self, index_path):
+        """Writes the instance index to index file"""
+        Path(index_path).parent.resolve().mkdir(parents=True, exist_ok=True)
+        with open(index_path, "w") as index_fp:
+            json.dump(self.index, index_fp, indent=2)
 
-    def index_updater(self, folder_ids, share_files=None, recursion=True, success=None, allow_files_without_tid=False):
-        files_pbar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
-        all_files = {}
+    def scan_folder(self, folder_id: str, files_progress_bar: tqdm, recursion: bool, add_nsw_files_without_title_id: bool, add_non_nsw_files: bool):
+        """Scans the folder id for files and updates the instance index"""
+        files = self.gdrive_service.get_all_files_in_folder(folder_id, recursion, files_progress_bar)
+
+        for (file_id, file_details) in files.items():
+            url_encoded_file_name = urllib.parse.quote(file_details["name"], safe="")
+            file_valid_nsw_check = add_non_nsw_files or url_encoded_file_name[-4:] in (".nsp", ".nsz", ".xci", ".xcz")
+            file_title_id_check = add_nsw_files_without_title_id or re.search(r"\%5B[0-9A-Fa-f]{16}\%5D", url_encoded_file_name)
+            if file_title_id_check and file_valid_nsw_check:
+                file_entry_to_add = {"url": f"gdrive:{file_id}#{url_encoded_file_name}", "size": int(file_details["size"])}
+                if file_entry_to_add not in self.index["files"]:
+                    self.index["files"].append(file_entry_to_add)
+                    self.files_shared_status.update({file_id: file_details["shared"]})
+
+    def share_index_files(self):
+        """Share files in index. Does nothing for files already shared."""
+        for file_entry in tqdm(self.index["files"], desc="File Share Progress", unit="file", unit_scale=True):
+            entry_file_id = file_entry["url"](":")[1].split("#")[0]
+            if not self.files_shared_status.get(entry_file_id):
+                self.gdrive_service.share_file(entry_file_id)
+
+    def update_index_success_message(self, success_message: str):
+        """Updates the index success message with new message"""
+        self.index.update({"success": success_message})
+
+    def index_generator(self, folder_ids: list, recursion: bool, add_nsw_files_without_title_id: bool, add_non_nsw_files: bool):
+        files_progress_bar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
+
         for folder_id in folder_ids:
-            self.gdrive_service.get_all_files_in_folder(folder_id, all_files, self.index_json["files"], recursion=recursion, files_pbar=files_pbar)
-        files_pbar.close()
-        for (file_id, file_details) in all_files.items():
-            share_file = False
-            if allow_files_without_tid or re.search(r"\%5B[0-9A-Fa-f]{16}\%5D", urllib.parse.quote(file_details["name"], safe="")):
-                check = {"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=urllib.parse.quote(file_details["name"], safe="")), "size": int(file_details["size"])}
-                if check not in self.index_json["files"]:
-                    self.index_json["files"].append(check)
-                    if share_files == "update" and not file_details["shared"]:
-                        share_file = True
-                if not share_file and share_files == "all" and not file_details["shared"]:
-                    share_file = True
-                if share_file:
-                    self.files_to_share.append(file_id)
-        if len(self.files_to_share) > 0:
-            for i in tqdm(range(len(self.files_to_share)), desc="File Share Progress"):
-                self.gdrive_service.share_file(self.files_to_share[i])
-        if success is not None:
-            self.index_json.update({"success": success})
-        self._update_index_file()
+            self.scan_folder(folder_id, files_progress_bar, recursion, add_nsw_files_without_title_id, add_non_nsw_files)
+
+    def write_encrypted_index_to_file(self, encrypt_path: str, encryption_public_key: str):
+        encrypt_file(json.dumps(self.index).encode("utf-8"), encrypt_path, public_key=encryption_public_key)
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script that will allow you to easily generate an index file with Google Drive file links for use with Tinfoil.")
-    parser.add_argument(nargs="*", metavar="FOLDER_ID_TO_SCAN", dest="folder_ids", help="Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a time.")
-    parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied.")
+    parser = argparse.ArgumentParser(description="Script that will allow you to generate an index file with Google Drive file links for use with Tinfoil")
+    parser.add_argument(nargs="*", metavar="FOLDER_ID_TO_SCAN", dest="folder_ids", help="Folder IDs of Google Drive folders to scan")
+
+    parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="File path to Google Credentials file")
+    parser.add_argument("--token", default="gdrive.token", metavar="TOKEN_FILE_PATH", help="File path of a Google Token file")
+    parser.add_argument("--headless", action="store_true", help="Allows to perform Google Token Authentication in headless environment")
+
+    parser.add_argument("--index-file", metavar="INDEX_FILE_PATH", default="index.tfl", help="File path for index file")
+    parser.add_argument("--update-mode", action="store_true", help="Updates existing index file keeping old files, if it exists, instead of regenerating a new file")
+    parser.add_argument("--share-files", action="store_true", help="Share files all files inside the index file")
+    parser.add_argument("--no-recursion", dest="recursion", action="store_false", help="Scans for files only in top directory for each folder ID entered")
+    parser.add_argument("--add-nsw-files-without-title-id", action="store_true", help="Adds files without ")
+    parser.add_argument("--add-non-nsw-files", action="store_true", help="Adds files without valid NSW ROM extension(NSP/NSZ/XCI/XCZ) to index")
+    parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Adds a success message to index file to show if index is successfully read by tinfoil")
+
+    parser.add_argument("--encrypt", nargs="?", metavar="ENC_INDEX_FILE_PATH", const="enc_index.tfl", help="Encrypts the resulting index file")
+    parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path for Public Key to encrypt with")
+
+    parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied")
     parser.add_argument("--upload-to-my-drive", action="store_true", help="Upload resulting index to My Drive")
-    parser.add_argument("--share-files", choices=["update", "all"], nargs="?", const="update", help="Use this flag if you want to share files that gets newly added to your index file. If you want to share files that was already added to your old index file, use \"--share-files all\"")
-    parser.add_argument("--credentials", default="credentials.json", metavar="CREDENTIALS_FILE_NAME", help="Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to select the correct account before downloading the credentails file.")
-    parser.add_argument("--token", default="gdrive.token", metavar="TOKEN_FILE_PATH", help="File Path of a Google Token file.")
-    parser.add_argument("--index-file", metavar="INDEX_FILE_PATH", default="index.tfl", help="File Path for unencrypted index file to update.")
-    parser.add_argument("--encrypt", nargs="?", metavar="ENC_INDEX_FILE_PATH", const="enc_index.tfl", help="Use this flag is you want to encrypt the resulting index file.")
-    parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.key", help="File Path for Public Key to encrypt with.")
-    parser.add_argument("--disable-recursion", dest="recursion", action="store_false", help="Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if you use this flag, the script will only add the files at the root of each folder ID passed, without going through the sub-folders in it.")
-    parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
-    parser.add_argument("--regenerate-index", action="store_true", help="Use this flag if you want to regenrate the index file from scratch instead of appending to old index file.")
-    parser.add_argument("--headless", action="store_true", help="Use this flag if you want to use the script in a headless environment.")
+    parser.add_argument("--new-upload-id", action="store_true", help="Uploads the newly generated index file to with a new file ID instead of replacing old one")
 
     args = parser.parse_args()
-    generator = TinGen(token_path=args.token, credentials_path=args.credentials, index_path=args.index_file, regenerate_index=args.regenerate_index, headless=args.headless)
-    generator.index_updater(args.folder_ids, share_files=args.share_files, recursion=args.recursion, success=args.success)
+    generator = TinGen(args.token, args.credentials, args.headless)
 
-    upload_file = args.index_file
+    print(f"Generating index")
+    generator.index_generator(args.folder_ids, args.recursion, args.add_nsw_files_without_title_id, args.add_non_nsw_files)
+
+    if args.success:
+        print(f"Adding success message to index")
+        generator.update_index_success_message(args.success)
+
+    if args.update_mode:
+        print(f"Adding files from {args.index_file} to new index")
+        generator.read_index(args.index_file)
+
+    print(f"Writing generated index to {args.index_file}")
+    generator.write_index_to_file(args.index_file)
+
+    if args.share_files:
+        print(f"Sharing files in index")
+        generator.share_index_files()
 
     if args.encrypt:
-        encrypt_file(args.index_file, args.encrypt, public_key=args.public_key)
-        upload_file = args.encrypt
+        print(f"Encrypting index to {args.encrypt}")
+        generator.write_encrypted_index_to_file(args.encrypt, args.public_key)
 
     if args.upload_folder_id:
-        generator.gdrive_service.upload_file(upload_file, args.upload_folder_id)
+        print(f"Uploading file to {args.upload_folder_id}")
+        generator.gdrive_service.upload_file(args.index_file if not args.encrypt else args.encrypt, args.upload_folder_id, args.new_upload_id)
+
     if args.upload_to_my_drive:
-        generator.gdrive_service.upload_file(upload_file)
+        print(f"Uploading file to \"My Drive\"")
+        generator.gdrive_service.upload_file(args.index_file if not args.encrypt else args.encrypt, None, args.new_upload_id)
+
+    print(f"Index Generation Complete")

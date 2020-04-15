@@ -32,27 +32,23 @@ import pathlib
 def encrypt_file(input, output, public_key="public.key"):
     pubKey = RSA.importKey(open(public_key).read())
 
-    def wrapKey(key):
+    def wrap_key(key):
         cipher = PKCS1_OAEP.new(pubKey, hashAlgo = Crypto.Hash.SHA256, label=b'')
         return cipher.encrypt(key)
 
-    aesKey = random.randint(0,0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, 'big')
+    aes_key = random.randint(0,0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, 'big')
 
     buf = None
 
     with open(input, 'rb') as f:
-        cipher = AES.new(aesKey, AES.MODE_ECB)
+        cipher = AES.new(aes_key, AES.MODE_ECB)
         buf = zlib.compress(f.read(), 9)
         sz = len(buf)
         buf = cipher.encrypt(buf + (b'\x00' * (0x10 - (sz % 0x10))))
 
-    print(aesKey)
-
     pathlib.Path(output).parent.resolve().mkdir(exist_ok=True, parents=True)
     with open(output, 'wb') as f:
         f.write(b'TINFOIL\xFE')
-        f.write(wrapKey(aesKey))
+        f.write(wrap_key(aes_key))
         f.write(sz.to_bytes(8, 'little'))
         f.write(buf)
-        
-    print('fin')
