@@ -15,43 +15,46 @@ Execute the following command in a terminal to install all the required modules.
 
 ## Usage
 ```
-usage: TinGen.py [-h] [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive] [--share-files [{update,all}]]
-                 [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH] [--index-file INDEX_FILE_PATH]
-                 [--encrypt [ENC_INDEX_FILE_PATH]] [--public-key PUBLIC_KEY_FILE_PATH] [--disable-recursion]
-                 [--success SUCCESS_MESSAGE] [--regenerate-index]
+usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH] [--headless]
+                 [--index-file INDEX_FILE_PATH] [--update-mode] [--share-files] [--no-recursion]
+                 [--add-nsw-files-without-title-id] [--add-non-nsw-files] [--success SUCCESS_MESSAGE]
+                 [--encrypt [ENC_INDEX_FILE_PATH]] [--public-key PUBLIC_KEY_FILE_PATH]
+                 [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive] [--new-upload-id]
                  [FOLDER_ID_TO_SCAN [FOLDER_ID_TO_SCAN ...]]
 
-Script that will allow you to easily generate a JSON file with Google Drive file links for use with Tinfoil.
+Script that will allow you to generate an index file with Google Drive file links for use with Tinfoil
 
 positional arguments:
-  FOLDER_ID_TO_SCAN     Folder ID of Google Drive folders to scan. Can use more than 1 folder IDs at a time.
+  FOLDER_ID_TO_SCAN     Folder IDs of Google Drive folders to scan
 
 optional arguments:
   -h, --help            show this help message and exit
-  --upload-to-folder-id UPLOAD_FOLDER_ID
-                        Upload resulting index to folder id supplied.
-  --upload-to-my-drive  Upload resulting index to My Drive
-  --share-files [{update,all}]
-                        Use this flag if you want to share files that gets newly added to your index file. If you want
-                        to share files that was already added to your old index file, use "--share-files all"
   --credentials CREDENTIALS_FILE_NAME
-                        Obtainable from https://developers.google.com/drive/api/v3/quickstart/python. Make sure to
-                        select the correct account before downloading the credentails file.
+                        File path to Google Credentials file
   --token TOKEN_FILE_PATH
-                        File Path of a Google Token file.
+                        File path of a Google Token file
+  --headless            Allows to perform Google Token Authentication in headless environment
   --index-file INDEX_FILE_PATH
-                        File Path for unencrypted index file to update.
-  --encrypt [ENC_INDEX_FILE_PATH]
-                        Use this flag is you want to encrypt the resulting index file.
-  --public-key PUBLIC_KEY_FILE_PATH
-                        File Path for Public Key to encrypt with.
-  --disable-recursion   Use this flag to stop folder IDs entered from being recusively scanned. (It basically means if
-                        you use this flag, the script will only add the files at the root of each folder ID passed,
-                        without going through the sub-folders in it.
+                        File path for index file
+  --update-mode         Updates existing index file keeping old files, if it exists, instead of
+                        regenerating a new file
+  --share-files         Share files all files inside the index file
+  --no-recursion        Scans for files only in top directory for each folder ID entered
+  --add-nsw-files-without-title-id
+                        Adds files without title ID
+  --add-non-nsw-files   Adds files without valid NSW ROM extension(NSP/NSZ/XCI/XCZ) to index
   --success SUCCESS_MESSAGE
-                        Success Message to add to index.
-  --regenerate-index    Use this flag if you want to regenrate the index file from scratch instead of appending to old
-                        index file.
+                        Adds a success message to index file to show if index is successfully read by
+                        tinfoil
+  --encrypt [ENC_INDEX_FILE_PATH]
+                        Encrypts the resulting index file
+  --public-key PUBLIC_KEY_FILE_PATH
+                        File Path for Public Key to encrypt with
+  --upload-to-folder-id UPLOAD_FOLDER_ID
+                        Upload resulting index to folder id supplied
+  --upload-to-my-drive  Upload resulting index to My Drive
+  --new-upload-id       Uploads the newly generated index file to with a new file ID instead of
+                        replacing old one
 ```
 
 ## Credits
