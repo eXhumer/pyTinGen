@@ -199,11 +199,9 @@ class GDrive:
 
         if dest_folder_id is None:
             if existing_file_id:
-                a = self.drive_service.files().update(fileId=existing_file_id, media_body=media)
-                response = self._apicall(a)
+                response = self._apicall(self.drive_service.files().update(fileId=existing_file_id, media_body=media))
             else:
-                a = self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True)
-                response = self._apicall(a)
+                response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
         else:
             if existing_file_id:
                 response = self._apicall(self.drive_service.files().update(fileId=existing_file_id, media_body=media))
