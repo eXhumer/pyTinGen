@@ -26,7 +26,7 @@ import socket, json, argparse, urllib.parse, time, re
 
 
 class GDrive:
-    def __init__(self, token_path: str, credentials_path: str, headless: bool):
+    def __init__(self, credentials_path: str, token_path: str, headless: bool):
         credentials = self._get_creds(credentials=credentials_path, token=token_path, headless=headless)
         self.drive_service = google_api_build("drive", "v3", credentials=credentials)
 
@@ -133,6 +133,19 @@ class GDrive:
             searchTerms="not mimeType contains \"application/vnd.google-apps.folder\""
         )
 
+    def _lsd_my_drive(self):
+        return self._ls(
+            "root",
+            searchTerms="mimeType contains \"application/vnd.google-apps.folder\""
+        )
+
+    def _lsf_my_drive(self, fields="files(id,name,size,permissionIds),nextPageToken"):
+        return self._ls(
+            "root",
+            fields=fields,
+            searchTerms="not mimeType contains \"application/vnd.google-apps.folder\""
+        )
+
     def check_file_shared(self, file_to_check):
         shared = False
         if "permissionIds" in file_to_check:
@@ -169,21 +182,31 @@ class GDrive:
     def upload_file(self, file_path, dest_folder_id, new_upload_id):
         existing_file_id = None
 
-        for _file in self._lsf(dest_folder_id):
-            if not new_upload_id or _file["name"] == Path(file_path).name:
-                print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
-                existing_file_id = _file["id"]
-                break
+        if dest_folder_id:
+            for _file in self._lsf(dest_folder_id):
+                if not new_upload_id or _file["name"] == Path(file_path).name:
+                    print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
+                    existing_file_id = _file["id"]
+                    break
+        else:
+            for _file in self._lsf_my_drive():
+                if not new_upload_id or _file["name"] == Path(file_path).name:
+                    print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
+                    existing_file_id = _file["id"]
+                    break
 
         media = MediaFileUpload(file_path)
+
         if dest_folder_id is None:
             if existing_file_id:
-                response = self._apicall(self.drive_service.files().update(existing_file_id, media_body=media, supportsAllDrives=True))
+                a = self.drive_service.files().update(fileId=existing_file_id, media_body=media)
+                response = self._apicall(a)
             else:
-                response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
+                a = self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True)
+                response = self._apicall(a)
         else:
             if existing_file_id:
-                response = self._apicall(self.drive_service.files().update(existing_file_id, media_body=media, supportsAllDrives=True))
+                response = self._apicall(self.drive_service.files().update(fileId=existing_file_id, media_body=media))
             else:
                 response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name, "parents": [dest_folder_id]}, supportsAllDrives=True))
 
