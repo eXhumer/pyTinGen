@@ -184,16 +184,19 @@ class GDrive:
 
         if dest_folder_id:
             for _file in self._lsf(dest_folder_id):
-                if not new_upload_id or _file["name"] == Path(file_path).name:
+                if _file["name"] == Path(file_path).name:
                     print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
                     existing_file_id = _file["id"]
                     break
         else:
             for _file in self._lsf_my_drive():
-                if not new_upload_id or _file["name"] == Path(file_path).name:
+                if _file["name"] == Path(file_path).name:
                     print(f"File with same name was found in destination folder. File in destination folder will be updated instead of creating new file.")
                     existing_file_id = _file["id"]
                     break
+
+        if existing_file_id is not None and new_upload_id:
+            existing_file_id = None
 
         media = MediaFileUpload(file_path)
 
@@ -270,8 +273,8 @@ class TinGen:
         for folder_id in folder_ids:
             self.scan_folder(folder_id, files_progress_bar, recursion, add_nsw_files_without_title_id, add_non_nsw_files)
 
-    def write_encrypted_index_to_file(self, encrypt_path: str, encryption_public_key: str):
-        encrypt_file(json.dumps(self.index).encode("utf-8"), encrypt_path, public_key=encryption_public_key)
+    def write_encrypted_index_to_file(self, index_file: str, encrypt_path: str, encryption_public_key: str):
+        encrypt_file(index_file, encrypt_path, public_key=encryption_public_key)
 
 
 if __name__ == "__main__":
@@ -295,7 +298,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied")
     parser.add_argument("--upload-to-my-drive", action="store_true", help="Upload resulting index to My Drive")
-    parser.add_argument("--new-upload-id", action="store_true", help="Uploads the newly generated index file to with a new file ID instead of replacing old one")
+    parser.add_argument("--new-upload-id", action="store_true", help="Uploads the newly generated index file with a new file ID instead of replacing old one")
 
     args = parser.parse_args()
     generator = TinGen(args.token, args.credentials, args.headless)
@@ -320,14 +323,16 @@ if __name__ == "__main__":
 
     if args.encrypt:
         print(f"Encrypting index to {args.encrypt}")
-        generator.write_encrypted_index_to_file(args.encrypt, args.public_key)
+        generator.write_encrypted_index_to_file(args.index_file, args.encrypt, args.public_key)
 
     if args.upload_folder_id:
-        print(f"Uploading file to {args.upload_folder_id}")
-        generator.gdrive_service.upload_file(args.index_file if not args.encrypt else args.encrypt, args.upload_folder_id, args.new_upload_id)
+        file_to_upload = args.index_file if not args.encrypt else args.encrypt
+        print(f"Uploading {file_to_upload} to {args.upload_folder_id}")
+        generator.gdrive_service.upload_file(file_to_upload, args.upload_folder_id, args.new_upload_id)
 
     if args.upload_to_my_drive:
-        print(f"Uploading file to \"My Drive\"")
-        generator.gdrive_service.upload_file(args.index_file if not args.encrypt else args.encrypt, None, args.new_upload_id)
+        file_to_upload = args.index_file if not args.encrypt else args.encrypt
+        print(f"Uploading {file_to_upload} to \"My Drive\"")
+        generator.gdrive_service.upload_file(file_to_upload, None, args.new_upload_id)
 
     print(f"Index Generation Complete")
