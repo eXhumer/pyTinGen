@@ -265,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument("--update-mode", action="store_true", help="Updates existing index file keeping old files, if it exists, instead of regenerating a new file")
     parser.add_argument("--share-files", action="store_true", help="Share files all files inside the index file")
     parser.add_argument("--no-recursion", dest="recursion", action="store_false", help="Scans for files only in top directory for each folder ID entered")
-    parser.add_argument("--add-nsw-files-without-title-id", action="store_true", help="Adds files without ")
+    parser.add_argument("--add-nsw-files-without-title-id", action="store_true", help="Adds files without title ID")
     parser.add_argument("--add-non-nsw-files", action="store_true", help="Adds files without valid NSW ROM extension(NSP/NSZ/XCI/XCZ) to index")
     parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Adds a success message to index file to show if index is successfully read by tinfoil")
 
