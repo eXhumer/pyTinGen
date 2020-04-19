@@ -5,7 +5,7 @@ from Crypto.PublicKey.RSA import import_key as import_rsa_key
 from Crypto.Hash import SHA256
 from pathlib import Path
 from random import randint
-from json import dumps as json_to_str
+from json import dumps as json_serialize
 from zlib import compress as zlib_compress
 from binascii import hexlify
 from binascii import unhexlify
@@ -16,8 +16,8 @@ def rand_aes_key_generator() -> bytes:
     return randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, "big")
 
 def create_encrypted_index(index_to_write: dict, out_path: Path, rsa_pub_key_path: Path, vm_path: Path, drm_key: bytes):
-    if rsa_pub_key_path.is_file() and index_to_write is not None and len(drm_key) >= 32:
-        index_buffer = bytes(json_to_str(index_to_write))
+    if rsa_pub_key_path.is_file():
+        index_buffer = bytes(json_serialize(index_to_write).encode())
         rsa_pub_key = import_rsa_key(open(rsa_pub_key_path).read())
         rand_aes_key = rand_aes_key_generator()
 

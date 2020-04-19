@@ -22,4 +22,4 @@ if __name__ == "__main__":
 	generator.index_folders(args.folder_ids, success=args.success)
 
 	if args.encrypt:
-		create_encrypted_index(generator.index_json, Path(args.encrypt), Path(args.public_key), Path(args.vm_file) if args.vm_file else None, unhexlify(args.drm_key) if args.drm_key else None)
+		create_encrypted_index(generator.index_json, Path(args.encrypt), Path(args.public_key), None if not args.vm_file else Path(args.vm_file), None if not args.drm_key else unhexlify(args.drm_key))
