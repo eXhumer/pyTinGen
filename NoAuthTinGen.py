@@ -5,7 +5,6 @@ from pathlib import Path
 from binascii import unhexlify
 from TinGen.utils import create_encrypted_index
 
-
 if __name__ == "__main__":
 	disable_url_warnings()
 	parser = ArgumentParser(description="Script that will allow you to easily generate an index file with Google Drive file links for use with Tinfoil without requiring authentication.")
