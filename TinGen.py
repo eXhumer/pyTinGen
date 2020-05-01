@@ -23,7 +23,6 @@ if __name__ == "__main__":
     parser.add_argument("--encrypt", nargs="?", metavar="ENC_INDEX_FILE_PATH", const="enc_index.tfl", help="Encrypts the resulting index file")
     parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.pem", help="File Path for Public Key to encrypt with")
     parser.add_argument("--vm-file", help="File Path for VM File")
-    parser.add_argument("--drm-key", help="DRM Key")
 
     parser.add_argument("--upload-to-folder-id", metavar="UPLOAD_FOLDER_ID", dest="upload_folder_id", help="Upload resulting index to folder id supplied")
     parser.add_argument("--upload-to-my-drive", action="store_true", help="Upload resulting index to My Drive")
@@ -53,7 +52,7 @@ if __name__ == "__main__":
 
     if args.encrypt:
         print(f"Encrypting index to {args.encrypt}")
-        create_encrypted_index(generator.index, Path(args.encrypt), Path(args.public_key), None if not args.vm_file else Path(args.vm_file), None if not args.drm_key else unhexlify(args.drm_key))
+        create_encrypted_index(generator.index, Path(args.encrypt), Path(args.public_key), None if not args.vm_file else Path(args.vm_file))
 
     if args.upload_folder_id:
         file_to_upload = args.index_file if not args.encrypt else args.encrypt

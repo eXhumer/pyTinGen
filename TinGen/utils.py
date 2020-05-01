@@ -13,7 +13,7 @@ from binascii import unhexlify
 def rand_aes_key_generator() -> bytes:
     return randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, "big")
 
-def create_encrypted_index(index_to_write: dict, out_path: Path, rsa_pub_key_path: Path, vm_path: Path, drm_key: bytes):
+def create_encrypted_index(index_to_write: dict, out_path: Path, rsa_pub_key_path: Path, vm_path: Path):
     if rsa_pub_key_path.is_file():
         index_buffer = bytes(json_serialize(index_to_write).encode())
         rsa_pub_key = import_rsa_key(open(rsa_pub_key_path).read())

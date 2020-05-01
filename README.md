@@ -22,7 +22,7 @@ usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_
                  [--index-file INDEX_FILE_PATH] [--update-mode] [--share-files] [--no-recursion]
                  [--add-nsw-files-without-title-id] [--add-non-nsw-files] [--success SUCCESS_MESSAGE]
                  [--encrypt [ENC_INDEX_FILE_PATH]] [--public-key PUBLIC_KEY_FILE_PATH] [--vm-file VM_FILE]
-                 [--drm-key DRM_KEY] [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive] [--new-upload-id]
+                 [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive] [--new-upload-id]
                  [--share-uploaded-index]
                  [FOLDER_ID_TO_SCAN [FOLDER_ID_TO_SCAN ...]]
 
@@ -54,7 +54,6 @@ optional arguments:
   --public-key PUBLIC_KEY_FILE_PATH
                         File Path for Public Key to encrypt with
   --vm-file VM_FILE     File Path for VM File
-  --drm-key DRM_KEY     DRM Key
   --upload-to-folder-id UPLOAD_FOLDER_ID
                         Upload resulting index to folder id supplied
   --upload-to-my-drive  Upload resulting index to My Drive

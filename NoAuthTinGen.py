@@ -13,7 +13,6 @@ if __name__ == "__main__":
 	parser.add_argument("--encrypt", nargs="?", metavar="ENC_INDEX_FILE_PATH", const="enc_index.tfl", help="Use this flag is you want to encrypt the resulting index file.")
 	parser.add_argument("--public-key", metavar="PUBLIC_KEY_FILE_PATH", default="public.pem", help="File Path for Public Key to encrypt with.")
 	parser.add_argument("--vm-file", help="File Path for VM File")
-	parser.add_argument("--drm-key", help="DRM Key")
 	parser.add_argument("--success", metavar="SUCCESS_MESSAGE", help="Success Message to add to index.")
 
 	args = parser.parse_args()
@@ -22,4 +21,4 @@ if __name__ == "__main__":
 	generator.index_folders(args.folder_ids, success=args.success)
 
 	if args.encrypt:
-		create_encrypted_index(generator.index_json, Path(args.encrypt), Path(args.public_key), None if not args.vm_file else Path(args.vm_file), None if not args.drm_key else unhexlify(args.drm_key))
+		create_encrypted_index(generator.index_json, Path(args.encrypt), Path(args.public_key), None if not args.vm_file else Path(args.vm_file))
