@@ -6,11 +6,9 @@ from Crypto.Hash import SHA256
 from pathlib import Path
 from random import randint
 from json import dumps as json_serialize
-from zlib import compress as zlib_compress
+from zstandard import ZstdCompressor
 from binascii import hexlify
 from binascii import unhexlify
-
-default_drm_key = b"\xA5\xFC\xFB\x5D\x15\x61\x92\x04\xC8\xC2\x13\x56\x77\x2B\xBF\xCC\x84\xB5\x5A\x1E\x58\x82\x7C\x4C\x57\xE5\xE3\x6F\x30\x0E\x11\xCD"
 
 def rand_aes_key_generator() -> bytes:
     return randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, "big")
@@ -27,11 +25,6 @@ def create_encrypted_index(index_to_write: dict, out_path: Path, rsa_pub_key_pat
         to_compress_buffer = b""
 
         if vm_path is not None and vm_path.is_file():
-            if drm_key is None:
-                drm_key = default_drm_key
-            
-            drm_aes_ctx = new_aes_ctx(drm_key[0:32], MODE_ECB)
-
             to_compress_buffer += b"\x13\x37\xB0\x0B"
             vm_buffer = b""
 
@@ -40,20 +33,20 @@ def create_encrypted_index(index_to_write: dict, out_path: Path, rsa_pub_key_pat
 
             to_compress_buffer += len(vm_buffer).to_bytes(4, "little")
             to_compress_buffer += vm_buffer
-            to_compress_buffer += drm_aes_ctx.encrypt(index_buffer + (b"\x00" * (0x10 - (len(index_buffer) % 0x10))))
-        else:
-            to_compress_buffer += index_buffer
 
-        index_compressed_buffer = zlib_compress(to_compress_buffer, 9)
+        to_compress_buffer += index_buffer
 
-        encrypted_key = pkcs1_oaep_ctx.encrypt(rand_aes_key)
+        index_compressed_buffer = ZstdCompressor(level=22).compress(to_compress_buffer)
+
+        session_key = pkcs1_oaep_ctx.encrypt(rand_aes_key)
         encrypted_index = aes_ctx.encrypt(index_compressed_buffer + (b"\x00" * (0x10 - (len(index_compressed_buffer) % 0x10))))
 
         Path(out_path.parent).mkdir(parents=True, exist_ok=True)
 
         with open(out_path, "wb") as out_stream:
-            out_stream.write(b"TINFOIL\xFE")
-            out_stream.write(encrypted_key)
+            out_stream.write(b"TINFOIL")
+            out_stream.write(b"\xFD") # Compression indicator flag - 0xF0 | 0x0D for zstandard, 0xF0 | 0x0E for zlib, 0xF0 | 0x00 for no compression
+            out_stream.write(session_key)
             out_stream.write(len(index_compressed_buffer).to_bytes(8, "little"))
             out_stream.write(encrypted_index)
 
