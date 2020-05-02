@@ -321,21 +321,15 @@ class UGdrive:
 			return ""
 
 class UTinGen:
-	def __init__(self, index_path="index.tfl"):
-		self.index_path = index_path
-		self.index_json = {"files": []}
+	def __init__(self):
+		self.index = {"files": []}
 		self.gdrive_service = UGdrive()
 
-	def write_index_to_file(self):
-		Path(self.index_path).parent.resolve().mkdir(parents=True, exist_ok=True)
-		with open(self.index_path, "w") as output_file:
-			json_writer(self.index_json, output_file, indent=2)
-
-	def index_folders(self, folder_ids, success=None, allow_files_without_tid=False):
+	def index_generator(self, folder_ids, add_non_nsw_files: bool, add_nsw_files_without_title_id: bool, success: str=None):
 		for folder_id in folder_ids:
 			for (file_id, file_details) in self.gdrive_service.get_files_in_folder_id(folder_id).items():
-				if allow_files_without_tid or regex_search(r"\%5B[0-9A-Fa-f]{16}\%5D", url_encode(file_details["name"], safe="")):
-					self.index_json["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=url_encode(file_details["name"], safe="")), "size": int(file_details["size"])})
+				if add_non_nsw_files or file_details["name"][-4:] in (".nsp", ".nsz", ".xci", ".xcz"):
+					if add_nsw_files_without_title_id or regex_search(r"\%5B[0-9A-Fa-f]{16}\%5D", url_encode(file_details["name"], safe="")):
+						self.index["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=url_encode(file_details["name"], safe="")), "size": int(file_details["size"])})
 		if success is not None:
-			self.index_json.update({"success": success})
-		self.write_index_to_file()
+			self.index.update({"success": success})
