@@ -261,75 +261,75 @@ class TinGen:
             self.scan_folder(folder_id, files_progress_bar, recursion, add_nsw_files_without_title_id, add_non_nsw_files)
 
 class UGdrive:
-	def __init__(self, session_headers={}):
-		self.session = Session()
-		self.session.headers.clear()
-		self.session.cookies.clear()
-		self.session.headers.update({
-			"Accept": "*/*",
-			"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1"
-		})
-		self.session.headers.update(session_headers)
+    def __init__(self, session_headers={}):
+        self.session = Session()
+        self.session.headers.clear()
+        self.session.cookies.clear()
+        self.session.headers.update({
+            "Accept": "*/*",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1"
+        })
+        self.session.headers.update(session_headers)
 
-	def make_request(self, method, url, **options):
-		req_headers = {}
-		if options.get("referer", False):
-			req_headers.update({"Referer": options.get("referer")})
-		return self.session.request(method, url, headers=req_headers, verify=False, stream=True)
+    def make_request(self, method, url, **options):
+        req_headers = {}
+        if options.get("referer", False):
+            req_headers.update({"Referer": options.get("referer")})
+        return self.session.request(method, url, headers=req_headers, verify=False, stream=True)
 
-	def get_files_in_folder_id(self, folder_id):
-		pbar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
-		files = {}
-		page_token = None
+    def get_files_in_folder_id(self, folder_id):
+        pbar = tqdm(desc="Files scanned", unit="file", unit_scale=True)
+        files = {}
+        page_token = None
 
-		try:
-			for _ in range(100): # LIMITS TO 100 PAGES MAXIMUM, SHOULD CHANGE THIS LATER
-				url = "https://clients6.google.com/drive/v2beta/files?openDrive=false&reason=102&syncType=0&errorRecovery=false&q=trashed%20%3D%20false%20and%20%27{folder_id}%27%20in%20parents&fields=kind%2CnextPageToken%2Citems(kind%2CfileSize%2Ctitle%2Cid)%2CincompleteSearch&appDataFilter=NO_APP_DATA&spaces=drive&maxResults=500&orderBy=folder%2Ctitle_natural%20asc&key={key}".format(folder_id=folder_id, key=self.get_folder_key(folder_id))
-				
-				if page_token is not None:
-					url = "{url}&pageToken={page_token}".format(url=url, page_token=page_token)
+        try:
+            for _ in range(100): # LIMITS TO 100 PAGES MAXIMUM, SHOULD CHANGE THIS LATER
+                url = "https://clients6.google.com/drive/v2beta/files?openDrive=false&reason=102&syncType=0&errorRecovery=false&q=trashed%20%3D%20false%20and%20%27{folder_id}%27%20in%20parents&fields=kind%2CnextPageToken%2Citems(kind%2CfileSize%2Ctitle%2Cid)%2CincompleteSearch&appDataFilter=NO_APP_DATA&spaces=drive&maxResults=500&orderBy=folder%2Ctitle_natural%20asc&key={key}".format(folder_id=folder_id, key=self.get_folder_key(folder_id))
+                
+                if page_token is not None:
+                    url = "{url}&pageToken={page_token}".format(url=url, page_token=page_token)
 
-				ls_response = self.make_request("GET", url, referer="https://drive.google.com/open?id={folder_id}".format(folder_id=folder_id))
-				ls_json = json_deserialize(ls_response.text)
-				pbar.update(len(ls_json["items"]))
+                ls_response = self.make_request("GET", url, referer="https://drive.google.com/open?id={folder_id}".format(folder_id=folder_id))
+                ls_json = json_deserialize(ls_response.text)
+                pbar.update(len(ls_json["items"]))
 
-				for drive_file in ls_json["items"]:
-					if drive_file["kind"] != "drive#file" and "fileSize" not in drive_file:
-						continue
+                for drive_file in ls_json["items"]:
+                    if drive_file["kind"] != "drive#file" and "fileSize" not in drive_file:
+                        continue
 
-					files.update({drive_file["id"]: {"name": drive_file["title"], "size": int(drive_file["fileSize"])}})
+                    files.update({drive_file["id"]: {"name": drive_file["title"], "size": int(drive_file["fileSize"])}})
 
-				if "nextPageToken" not in ls_json:
-					break
+                if "nextPageToken" not in ls_json:
+                    break
 
-				page_token = ls_json["nextPageToken"]
-		except:
-			pass
+                page_token = ls_json["nextPageToken"]
+        except:
+            pass
 
-		pbar.close()
-		return files
+        pbar.close()
+        return files
 
-	def get_folder_key(self, folder_id):
-		response = self.make_request("GET", "https://drive.google.com/open?id={folder_id}".format(folder_id=folder_id))
+    def get_folder_key(self, folder_id):
+        response = self.make_request("GET", "https://drive.google.com/open?id={folder_id}".format(folder_id=folder_id))
 
-		try:
-			start = response.text.index("__initData = ") + len("__initData = ")
-			end = response.text.index(";", start)
-			json_data = json_deserialize(response.text[start:end])
-			return json_data[0][9][32][35] # :nospies:
-		except:
-			return ""
+        try:
+            start = response.text.index("__initData = ") + len("__initData = ")
+            end = response.text.index(";", start)
+            json_data = json_deserialize(response.text[start:end])
+            return json_data[0][9][32][35] # :nospies:
+        except:
+            return ""
 
 class UTinGen:
-	def __init__(self):
-		self.index = {"files": []}
-		self.gdrive_service = UGdrive()
+    def __init__(self):
+        self.index = {"files": []}
+        self.gdrive_service = UGdrive()
 
-	def index_generator(self, folder_ids, add_non_nsw_files: bool, add_nsw_files_without_title_id: bool, success: str=None):
-		for folder_id in folder_ids:
-			for (file_id, file_details) in self.gdrive_service.get_files_in_folder_id(folder_id).items():
-				if add_non_nsw_files or file_details["name"][-4:] in (".nsp", ".nsz", ".xci", ".xcz"):
-					if add_nsw_files_without_title_id or regex_search(r"\%5B[0-9A-Fa-f]{16}\%5D", url_encode(file_details["name"], safe="")):
-						self.index["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=url_encode(file_details["name"], safe="")), "size": int(file_details["size"])})
-		if success is not None:
-			self.index.update({"success": success})
+    def index_generator(self, folder_ids, add_non_nsw_files: bool, add_nsw_files_without_title_id: bool, success: str=None):
+        for folder_id in folder_ids:
+            for (file_id, file_details) in self.gdrive_service.get_files_in_folder_id(folder_id).items():
+                if add_non_nsw_files or file_details["name"][-4:] in (".nsp", ".nsz", ".xci", ".xcz"):
+                    if add_nsw_files_without_title_id or regex_search(r"\%5B[0-9A-Fa-f]{16}\%5D", url_encode(file_details["name"], safe="")):
+                        self.index["files"].append({"url": "gdrive:{file_id}#{file_name}".format(file_id=file_id, file_name=url_encode(file_details["name"], safe="")), "size": int(file_details["size"])})
+        if success is not None:
+            self.index.update({"success": success})
