@@ -19,11 +19,10 @@ pip3 install -r requirements.txt
 ## Usage
 ```
 usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH] [--headless]
-                 [--index-file INDEX_FILE_PATH] [--update-mode] [--share-files] [--no-recursion]
-                 [--add-nsw-files-without-title-id] [--add-non-nsw-files] [--success SUCCESS_MESSAGE]
-                 [--encrypt [ENC_INDEX_FILE_PATH]] [--public-key PUBLIC_KEY_FILE_PATH] [--vm-file VM_FILE]
-                 [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive] [--new-upload-id]
-                 [--share-uploaded-index]
+                 [--index-file INDEX_FILE_PATH] [--share-files] [--no-recursion] [--add-nsw-files-without-title-id]
+                 [--add-non-nsw-files] [--success SUCCESS_MESSAGE] [--encrypt] [--public-key PUBLIC_KEY_FILE_PATH]
+                 [--vm-file VM_FILE] [--upload-to-folder-id UPLOAD_FOLDER_ID] [--upload-to-my-drive]
+                 [--new-upload-id] [--share-uploaded-index] [--zstandard | --zlib | --no-compress]
                  [FOLDER_ID_TO_SCAN [FOLDER_ID_TO_SCAN ...]]
 
 Script that will allow you to generate an index file with Google Drive file links for use with Tinfoil
@@ -40,8 +39,6 @@ optional arguments:
   --headless            Allows to perform Google Token Authentication in headless environment
   --index-file INDEX_FILE_PATH
                         File path for index file
-  --update-mode         Updates existing index file keeping old files, if it exists, instead of regenerating a new
-                        file
   --share-files         Share files all files inside the index file
   --no-recursion        Scans for files only in top directory for each folder ID entered
   --add-nsw-files-without-title-id
@@ -49,8 +46,7 @@ optional arguments:
   --add-non-nsw-files   Adds files without valid NSW ROM extension(NSP/NSZ/XCI/XCZ) to index
   --success SUCCESS_MESSAGE
                         Adds a success message to index file to show if index is successfully read by tinfoil
-  --encrypt [ENC_INDEX_FILE_PATH]
-                        Encrypts the resulting index file
+  --encrypt             Encrypts the resulting index file
   --public-key PUBLIC_KEY_FILE_PATH
                         File Path for Public Key to encrypt with
   --vm-file VM_FILE     File Path for VM File
@@ -60,6 +56,10 @@ optional arguments:
   --new-upload-id       Uploads the newly generated index file with a new file ID instead of replacing old one
   --share-uploaded-index
                         Shares the index file that is uploaded to Google Drive
+  --zstandard           Compresses index with Zstandard compression method
+  --zlib                Compresses index with Zlib compression method
+  --no-compress         Flag to not compress index
+
 ```
 
 ## Credits
