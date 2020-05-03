@@ -51,7 +51,7 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
 
     to_write_buffer += (b"\x00" * (0x10 - (len(to_write_buffer) % 0x10)))
 
-    if rsa_pub_key_path.is_file():
+    if rsa_pub_key_path is not None and rsa_pub_key_path.is_file():
         def rand_aes_key_generator() -> bytes:
             return randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, "big")
 
