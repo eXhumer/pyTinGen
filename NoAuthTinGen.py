@@ -36,13 +36,7 @@ if __name__ == "__main__":
     elif args.no_compress:
         compression_flag = CompressionFlag.NO_COMPRESSION
 
-    vm_file = None
-    public_key = None
-
-    if args.encrypt:
-        if args.vm_file:
-            vm_file = args.vm_file
-        if args.public_key:
-            public_key = args.public_key
-
-    create_tinfoil_index(generator.index, Path(args.index_path), compression_flag, rsa_pub_key_path=public_key, vm_path=vm_file)
+    if args.encrypt and args.vm_file and args.public_key:
+        create_tinfoil_index(generator.index, Path(args.index_path), compression_flag, rsa_pub_key_path=args.public_key, vm_path=args.vm_file)
+    else:
+        create_tinfoil_index(generator.index, Path(args.index_path), compression_flag)
