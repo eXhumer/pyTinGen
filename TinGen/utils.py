@@ -65,7 +65,7 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
         to_write_buffer = aes_ctx.encrypt(to_write_buffer)
 
     else:
-        session_key += b"\x00" * 0xFF
+        session_key += b"\x00" * 0x100
 
     Path(out_path.parent).mkdir(parents=True, exist_ok=True)
 
