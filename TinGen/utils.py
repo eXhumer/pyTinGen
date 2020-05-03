@@ -14,9 +14,14 @@ from zstandard import ZstdCompressor
 
 
 class CompressionFlag(IntEnum):
-    ZLIB_COMPRESSION = 0xFE
-    ZSTD_COMPRESSION = 0xFD
+    ZLIB_COMPRESSION = 0x0E
+    ZSTD_COMPRESSION = 0x0D
     NO_COMPRESSION = 0x00
+
+
+class EncryptionFlag(IntEnum):
+    ENCRYPT = 0xF0
+    NO_ENCRYPT = 0x00
 
 
 def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag: int, rsa_pub_key_path: Path=None, vm_path: Path=None):
@@ -50,6 +55,7 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
         raise NotImplementedError("Compression method supplied is not implemented yet.")
 
     data_size = len(to_write_buffer)
+    flag = None
     to_write_buffer += (b"\x00" * (0x10 - (data_size % 0x10)))
 
     if rsa_pub_key_path is not None and rsa_pub_key_path.is_file():
@@ -64,14 +70,16 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
 
         session_key += pkcs1_oaep_ctx.encrypt(rand_aes_key)
         to_write_buffer = aes_ctx.encrypt(to_write_buffer)
+        flag = compression_flag | EncryptionFlag.ENCRYPT
     else:
         session_key += b"\x00" * 0x100
+        flag = compression_flag | EncryptionFlag.NO_ENCRYPT
 
     Path(out_path.parent).mkdir(parents=True, exist_ok=True)
 
     with open(out_path, "wb") as out_stream:
         out_stream.write(b"TINFOIL")
-        out_stream.write(compression_flag.to_bytes(1, byteorder="little"))
+        out_stream.write(flag.to_bytes(1, byteorder="little"))
         out_stream.write(session_key)
         out_stream.write(data_size.to_bytes(8, "little"))
         out_stream.write(to_write_buffer)
