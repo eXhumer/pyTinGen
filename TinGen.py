@@ -58,9 +58,9 @@ if __name__ == "__main__":
 
     if args.encrypt:
         if args.vm_file:
-            vm_file = args.vm_file
+            vm_file = Path(args.vm_file)
         if args.public_key:
-            public_key = args.public_key
+            public_key = Path(args.public_key)
 
     print(f"Creating generated index to {args.index_file}")
     create_tinfoil_index(generator.index, Path(args.index_file), compression_flag, rsa_pub_key_path=public_key, vm_path=vm_file)
