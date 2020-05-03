@@ -49,7 +49,8 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
     else:
         raise NotImplementedError("Compression method supplied is not implemented yet.")
 
-    to_write_buffer += (b"\x00" * (0x10 - (len(to_write_buffer) % 0x10)))
+    data_size = len(to_write_buffer)
+    to_write_buffer += (b"\x00" * (0x10 - (data_size % 0x10)))
 
     if rsa_pub_key_path is not None and rsa_pub_key_path.is_file():
         def rand_aes_key_generator() -> bytes:
@@ -63,7 +64,6 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
 
         session_key += pkcs1_oaep_ctx.encrypt(rand_aes_key)
         to_write_buffer = aes_ctx.encrypt(to_write_buffer)
-
     else:
         session_key += b"\x00" * 0x100
 
@@ -73,5 +73,5 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
         out_stream.write(b"TINFOIL")
         out_stream.write(bytes([compression_flag]))
         out_stream.write(session_key)
-        out_stream.write(len(to_write_buffer).to_bytes(8, "little"))
+        out_stream.write(data_size.to_bytes(8, "little"))
         out_stream.write(to_write_buffer)
