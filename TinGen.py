@@ -63,7 +63,7 @@ if __name__ == "__main__":
             public_key = args.public_key
 
     print(f"Creating generated index to {args.index_file}")
-    create_tinfoil_index(generator.index, args.index_file, compression_flag, rsa_pub_key_path=public_key, vm_path=vm_file)
+    create_tinfoil_index(generator.index, Path(args.index_file), compression_flag, rsa_pub_key_path=public_key, vm_path=vm_file)
 
     if args.share_files:
         print(f"Sharing files in index")

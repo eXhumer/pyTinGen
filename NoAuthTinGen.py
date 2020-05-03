@@ -45,4 +45,4 @@ if __name__ == "__main__":
         if args.public_key:
             public_key = args.public_key
 
-    create_tinfoil_index(generator.index, args.index_path, compression_flag, public_key, vm_file)
+    create_tinfoil_index(generator.index, Path(args.index_path), compression_flag, rsa_pub_key_path=public_key, vm_path=vm_file)
