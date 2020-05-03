@@ -63,4 +63,5 @@ optional arguments:
 ```
 
 ## Credits
-[BigBrainAFK](https://github.com/BigBrainAFK/) for Inital Crypto Script for Index Encryption.
+[BigBrainAFK](https://github.com/BigBrainAFK/) for inital crypto script for index encryption.
+[blawar](https://github.com/blawar/) for tinfoil and for early access to details about new index format and supported compression methods and also for helping me with my dumb questions.
