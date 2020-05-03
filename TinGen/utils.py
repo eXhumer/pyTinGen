@@ -71,7 +71,7 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
 
     with open(out_path, "wb") as out_stream:
         out_stream.write(b"TINFOIL")
-        out_stream.write(bytes([compression_flag]))
+        out_stream.write(compression_flag.to_bytes(1, byteorder="little"))
         out_stream.write(session_key)
         out_stream.write(data_size.to_bytes(8, "little"))
         out_stream.write(to_write_buffer)
