@@ -107,8 +107,10 @@ def read_index(index_path: Path, rsa_priv_key_path: Path=None) -> dict:
         flags = index_stream.read(1)[0]
         encryption_flag = flags & 0xF0
 
-        if encryption_flag not in EncryptionFlag:
-            raise RuntimeError(f"Index is encrypted and private key doesn't exist. Unable to decrypt without private key.")
+        key_available = rsa_priv_key_path is not None and rsa_priv_key_path.is_file()
+
+        if encryption_flag == EncryptionFlag.ENCRYPT and not key_available:
+            raise RuntimeError(f"Unable to decrypt encrypted index without private key.")
 
         compression_flag = flags & 0x0F
 
