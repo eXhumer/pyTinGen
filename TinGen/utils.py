@@ -7,10 +7,14 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey.RSA import import_key as import_rsa_key
 from enum import IntEnum
 from json import dumps as json_serialize
+from json import loads as json_deserialize
+from json import JSONDecodeError
 from pathlib import Path
 from random import randint
 from zlib import compress as zlib_compress
+from zlib import decompress as zlib_decompress
 from zstandard import ZstdCompressor
+from zstandard import ZstdDecompressor
 
 
 class CompressionFlag(IntEnum):
@@ -83,3 +87,56 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
         out_stream.write(session_key)
         out_stream.write(data_size.to_bytes(8, "little"))
         out_stream.write(to_write_buffer)
+
+def read_index(index_path: Path, rsa_priv_key_path: Path=None) -> dict:
+    if index_path is None or not index_path.is_file():
+        raise RuntimeError(f"Unable to read non-existant index file \"{index_path}\"")
+
+    encryption_flag = None
+    compression_flag = None
+    session_key = None
+    data_size = None
+    to_read_buffer = None
+
+    with open(index_path, "rb") as index_stream:
+        magic = str(index_stream.read(7))
+
+        if magic != "TINFOIL":
+            raise RuntimeError(f"Invalid tinfoil index magic.\n\nExpected Magic = \"TINFOIL\"\nMagic in index file = \"{magic}\"")
+
+        flags = index_stream.read(1)[0]
+        encryption_flag = flags & 0xF0
+
+        if encryption_flag not in EncryptionFlag:
+            raise RuntimeError(f"Index is encrypted and private key doesn't exist. Unable to decrypt without private key.")
+
+        compression_flag = flags & 0x0F
+
+        if compression_flag not in CompressionFlag:
+            raise RuntimeError(f"Unimplemented compression method encountered while reading index header.")
+
+        session_key = index_stream.read(0x100)
+        data_size = int.from_bytes(index_stream.read(8), byteorder="little")
+        to_read_buffer = index_stream.read()
+
+    if encryption_flag == EncryptionFlag.ENCRYPT:
+        rsa_priv_key = import_rsa_key(open(rsa_priv_key_path).read())
+        pkcs1_oaep_ctx = new_pkcs1_oaep_ctx(rsa_priv_key, hashAlgo=SHA256, label=b"")
+        aes_key = pkcs1_oaep_ctx.decrypt(session_key)
+        aes_ctx = new_aes_ctx(aes_key, MODE_ECB)
+        to_read_buffer = aes_ctx.decrypt(to_read_buffer)
+
+    if compression_flag == CompressionFlag.ZSTD_COMPRESSION:
+        to_read_buffer = ZstdDecompressor().decompress(to_read_buffer[:data_size])
+
+    elif compression_flag == CompressionFlag.ZLIB_COMPRESSION:
+        to_read_buffer = zlib_decompress(to_read_buffer[:data_size])
+
+    elif compression_flag == CompressionFlag.NO_COMPRESSION:
+        to_read_buffer = to_read_buffer[:data_size]
+
+    try:
+        return json_deserialize(to_read_buffer)
+
+    except JSONDecodeError:
+        raise RuntimeError(f"Unable to deserialize index data.")
