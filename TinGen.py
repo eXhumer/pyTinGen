@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     if args.success:
         print(f"Adding success message to index")
-        generator.update_index_success_message(args.success)
+        generator.update_index_success_message(bytes(args.success, 'utf8').decode('unicode_escape'))
 
     compression_flag = CompressionFlag.ZSTD_COMPRESSION
 
