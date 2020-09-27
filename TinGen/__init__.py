@@ -198,10 +198,11 @@ class GDrive:
                 response = self._apicall(self.drive_service.files().create(media_body=media, body={"name": Path(file_path).name}, supportsAllDrives=True))
 
         if "id" in response:
+            file_id = response["id"]
             if share_index:
                 print(f"Sharing {Path(file_path).name}")
-                self.share_file(response["id"])
-            print("Add the following to tinfoil: gdrive:/{file_id}#{file_name}".format(file_id=response["id"], file_name=response["name"]))
+                self.share_file(file_id)
+            print(f"Add the following to Tinfoil: https://drive.google.com/uc?id={file_id}\nYou can use tiny.cc to shorten the URL and make it easier to add it Tinfoil.")
 
 class TinGen:
     def __init__(self, credentials_path: str, token_path: str, headless: bool):
