@@ -15,7 +15,7 @@ All tinfoil indexes are generated with the following format: [Tinfoil-New-Index-
 
 Execute the following command in a terminal to install all the required modules.  
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Usage
