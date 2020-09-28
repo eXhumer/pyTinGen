@@ -19,6 +19,8 @@ pip3 install -r requirements.txt
 ```
 
 ## Usage
+Usage instructions can be found [here](https://github.com/eXhumer/TinGen/wiki).
+
 ```
 usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH] [--headless]
                  [--index-file INDEX_FILE_PATH] [--share-files] [--no-recursion]
