@@ -1,5 +1,3 @@
-from binascii import hexlify
-from binascii import unhexlify
 from Crypto.Cipher.AES import MODE_ECB
 from Crypto.Cipher.AES import new as new_aes_ctx
 from Crypto.Cipher.PKCS1_OAEP import new as new_pkcs1_oaep_ctx
@@ -28,7 +26,13 @@ class EncryptionFlag(IntEnum):
     NO_ENCRYPT = 0x00
 
 
-def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag: int, rsa_pub_key_path: Path=None, vm_path: Path=None):
+def create_tinfoil_index(
+    index_to_write: dict,
+    out_path: Path,
+    compression_flag: int,
+    rsa_pub_key_path: Path = None,
+    vm_path: Path = None
+):
     to_compress_buffer = b""
 
     if vm_path is not None and vm_path.is_file():
@@ -47,7 +51,9 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
     session_key = b""
 
     if compression_flag == CompressionFlag.ZSTD_COMPRESSION:
-        to_write_buffer += ZstdCompressor(level=22).compress(to_compress_buffer)
+        to_write_buffer += ZstdCompressor(level=22).compress(
+            to_compress_buffer
+        )
 
     elif compression_flag == CompressionFlag.ZLIB_COMPRESSION:
         to_write_buffer += zlib_compress(to_compress_buffer, 9)
@@ -56,7 +62,9 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
         to_write_buffer += to_compress_buffer
 
     else:
-        raise NotImplementedError("Compression method supplied is not implemented yet.")
+        raise NotImplementedError(
+            "Compression method supplied is not implemented yet."
+        )
 
     data_size = len(to_write_buffer)
     flag = None
@@ -64,12 +72,18 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
 
     if rsa_pub_key_path is not None and rsa_pub_key_path.is_file():
         def rand_aes_key_generator() -> bytes:
-            return randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, "big")
+            return randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(
+                0x10, byteorder="big"
+            )
 
         rsa_pub_key = import_rsa_key(open(rsa_pub_key_path).read())
         rand_aes_key = rand_aes_key_generator()
 
-        pkcs1_oaep_ctx = new_pkcs1_oaep_ctx(rsa_pub_key, hashAlgo=SHA256, label=b"")
+        pkcs1_oaep_ctx = new_pkcs1_oaep_ctx(
+            rsa_pub_key,
+            hashAlgo=SHA256,
+            label=b""
+        )
         aes_ctx = new_aes_ctx(rand_aes_key, MODE_ECB)
 
         session_key += pkcs1_oaep_ctx.encrypt(rand_aes_key)
@@ -88,9 +102,12 @@ def create_tinfoil_index(index_to_write: dict, out_path: Path, compression_flag:
         out_stream.write(data_size.to_bytes(8, "little"))
         out_stream.write(to_write_buffer)
 
-def read_index(index_path: Path, rsa_priv_key_path: Path=None) -> dict:
+
+def read_index(index_path: Path, rsa_priv_key_path: Path = None) -> dict:
     if index_path is None or not index_path.is_file():
-        raise RuntimeError(f"Unable to read non-existant index file \"{index_path}\"")
+        raise RuntimeError(
+            f"Unable to read non-existant index file \"{index_path}\""
+        )
 
     encryption_flag = None
     compression_flag = None
@@ -102,20 +119,29 @@ def read_index(index_path: Path, rsa_priv_key_path: Path=None) -> dict:
         magic = str(index_stream.read(7))
 
         if magic != "TINFOIL":
-            raise RuntimeError(f"Invalid tinfoil index magic.\n\nExpected Magic = \"TINFOIL\"\nMagic in index file = \"{magic}\"")
+            raise RuntimeError(
+                "Invalid tinfoil index magic.\n\nExpected Magic = " +
+                f"\"TINFOIL\"\nMagic in index file = \"{magic}\""
+            )
 
         flags = index_stream.read(1)[0]
         encryption_flag = flags & 0xF0
 
-        key_available = rsa_priv_key_path is not None and rsa_priv_key_path.is_file()
+        key_available = rsa_priv_key_path is not None and \
+            rsa_priv_key_path.is_file()
 
         if encryption_flag == EncryptionFlag.ENCRYPT and not key_available:
-            raise RuntimeError(f"Unable to decrypt encrypted index without private key.")
+            raise RuntimeError(
+                "Unable to decrypt encrypted index without private key."
+            )
 
         compression_flag = flags & 0x0F
 
         if compression_flag not in CompressionFlag:
-            raise RuntimeError(f"Unimplemented compression method encountered while reading index header.")
+            raise RuntimeError(
+                "Unimplemented compression method encountered while reading " +
+                "index header."
+            )
 
         session_key = index_stream.read(0x100)
         data_size = int.from_bytes(index_stream.read(8), byteorder="little")
@@ -123,13 +149,19 @@ def read_index(index_path: Path, rsa_priv_key_path: Path=None) -> dict:
 
     if encryption_flag == EncryptionFlag.ENCRYPT:
         rsa_priv_key = import_rsa_key(open(rsa_priv_key_path).read())
-        pkcs1_oaep_ctx = new_pkcs1_oaep_ctx(rsa_priv_key, hashAlgo=SHA256, label=b"")
+        pkcs1_oaep_ctx = new_pkcs1_oaep_ctx(
+            rsa_priv_key,
+            hashAlgo=SHA256,
+            label=b""
+        )
         aes_key = pkcs1_oaep_ctx.decrypt(session_key)
         aes_ctx = new_aes_ctx(aes_key, MODE_ECB)
         to_read_buffer = aes_ctx.decrypt(to_read_buffer)
 
     if compression_flag == CompressionFlag.ZSTD_COMPRESSION:
-        to_read_buffer = ZstdDecompressor().decompress(to_read_buffer[:data_size])
+        to_read_buffer = ZstdDecompressor().decompress(
+            to_read_buffer[:data_size]
+        )
 
     elif compression_flag == CompressionFlag.ZLIB_COMPRESSION:
         to_read_buffer = zlib_decompress(to_read_buffer[:data_size])
@@ -141,4 +173,4 @@ def read_index(index_path: Path, rsa_priv_key_path: Path=None) -> dict:
         return json_deserialize(to_read_buffer)
 
     except JSONDecodeError:
-        raise RuntimeError(f"Unable to deserialize index data.")
+        raise RuntimeError("Unable to deserialize index data.")
