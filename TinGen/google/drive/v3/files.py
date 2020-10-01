@@ -357,38 +357,43 @@ def upload_resumable_chunk(
     )
 
 
-def download_file_chunked(
+def get(
     file_id: str,
-    acknowledge_abuse: bool = False,
-    download_start: Optional[int] = None,
-    download_end: Optional[int] = None,
+    fields: Optional[List[str]] = None,
+    **params: Any,
 ) -> Request:
-    params = {
-        'alt': 'media',
-        'supportAllDrives': True,
-        'acknowledgeAbuse': acknowledge_abuse,
-    }
-
-    headers = {
-        'Range': 'bytes='
-    }
-
-    if download_start:
-        headers['Range'] += str(download_start)
-
-    headers['Range'] += '-'
-
-    if download_end:
-        headers['Range'] += str(download_end)
-
-    if headers['Range'] == 'bytes=-':
-        headers['Range'] = None
-
+    if fields:
+        params.update({'fields': ','.join(fields)})
     return Request(
         'GET',
         f'https://www.googleapis.com/drive/v3/files/{file_id}',
         params=params,
-        headers=headers,
     )
+
+
+def download_file_chunked(
+    file_id: str,
+    download_start: Optional[int] = None,
+    download_end: Optional[int] = None,
+    **params: Any,
+) -> Request:
+    req = get(
+        file_id,
+        **params,
+    )
+    req.headers['Range'] = 'bytes='
+
+    if download_start:
+        req.headers['Range'] += str(download_start)
+
+    req.headers['Range'] += '-'
+
+    if download_end:
+        req.headers['Range'] += str(download_end)
+
+    if req.headers['Range'] == 'bytes=-':
+        req.headers['Range'] = None
+
+    return req
 
 # TODO - Streaming download
