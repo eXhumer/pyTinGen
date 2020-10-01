@@ -4,7 +4,6 @@ import json
 from typing import List
 from typing import Optional
 from requests import Request
-from requests import PreparedRequest
 from google.drive.v3 import DRIVE_V3_BASE_URL
 
 FILES_BASE_URL = f'{DRIVE_V3_BASE_URL}/files'
@@ -20,7 +19,7 @@ def copy(
     ignore_default_visibility: Optional[bool] = None,
     include_permissions_for_view: Optional[str] = None,
     **file_info,
-) -> PreparedRequest:
+) -> Request:
     '''Make a server side copy using file ID.
 
     For more information,
@@ -77,13 +76,13 @@ def copy(
         params=params,
         headers=headers,
         data=data,
-    ).prepare()
+    )
 
 
 def delete(
     file_id: str,
     supports_all_drives: Optional[str] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Delete a file using file ID.
 
     For more information,
@@ -100,10 +99,10 @@ def delete(
         'DELETE',
         f'{FILES_BASE_URL}/{file_id}',
         params=params,
-    ).prepare()
+    )
 
 
-def empty_trash() -> PreparedRequest:
+def empty_trash() -> Request:
     '''Empty a user's trash.
 
     For more information,
@@ -113,14 +112,14 @@ def empty_trash() -> PreparedRequest:
     return Request(
         'DELETE',
         f'{FILES_BASE_URL}/trash',
-    ).prepare()
+    )
 
 
 def export(
     file_id: str,
     mime_type: str,
     fields: Optional[List[str]] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Export a Google Doc to the requested MIME type.
 
     For more information,
@@ -142,14 +141,14 @@ def export(
         'GET',
         f'{FILES_BASE_URL}/{file_id}/export',
         params=params,
-    ).prepare()
+    )
 
 
 def generate_ids(
     count: Optional[int],
     fields: Optional[List[str]] = None,
     space: Optional[str] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Generates a set of file IDs which can be provided in create or copy
     requests.
 
@@ -178,7 +177,7 @@ def generate_ids(
         'GET',
         f'{FILES_BASE_URL}/generateIds',
         params=params,
-    ).prepare()
+    )
 
 
 def list_(
@@ -193,7 +192,7 @@ def list_(
     supports_all_drives: Optional[str] = None,
     include_permissions_for_view: Optional[str] = None,
     include_items_from_all_drives: Optional[bool] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Get a list of files.
 
     For more information,
@@ -263,6 +262,6 @@ def list_(
         'GET',
         f'{FILES_BASE_URL}/generateIds',
         params=params,
-    ).prepare()
+    )
 
 # TODO - Implement Upload/Download

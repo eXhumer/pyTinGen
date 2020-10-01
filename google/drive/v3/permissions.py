@@ -5,7 +5,6 @@ from typing import List
 from typing import Optional
 from requests import Request
 from datetime import datetime
-from requests import PreparedRequest
 from google.drive.v3.files import FILES_BASE_URL
 
 
@@ -25,7 +24,7 @@ def create(
     use_domain_admin_access: Optional[bool] = None,
     move_to_new_owners_root: Optional[bool] = None,
     **perm_info,
-) -> PreparedRequest:
+) -> Request:
     '''Creates a new permission for a file.
 
     For more info,
@@ -125,7 +124,7 @@ def create(
         params=query_params,
         headers=headers,
         data=data
-    ).prepare()
+    )
 
 
 def delete(
@@ -133,7 +132,7 @@ def delete(
     perm_id: str,
     supports_all_drives: Optional[bool] = None,
     use_domain_admin_access: Optional[bool] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Deletes a file permission with file ID and permission ID.
 
     For more information,
@@ -155,7 +154,7 @@ def delete(
         'DELETE',
         f'{FILES_BASE_URL}/{file_id}/permissions/{perm_id}',
         params=query_params,
-    ).prepare()
+    )
 
 
 def get(
@@ -164,7 +163,7 @@ def get(
     fields: Optional[List[str]] = None,
     supports_all_drives: Optional[bool] = None,
     use_domain_admin_access: Optional[bool] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Retrieve a file permission information by file ID and
     permission ID.
 
@@ -193,7 +192,7 @@ def get(
         'GET',
         f'{FILES_BASE_URL}/{file_id}/permissions/{perm_id}',
         params=params
-    ).prepare()
+    )
 
 
 def list_(
@@ -204,7 +203,7 @@ def list_(
     supports_all_drives: Optional[bool] = None,
     use_domain_admin_access: Optional[bool] = None,
     include_permissions_for_view: Optional[str] = None,
-) -> PreparedRequest:
+) -> Request:
     '''List all file permissions by file ID.
 
     For more information,
@@ -248,7 +247,7 @@ def list_(
         'GET',
         f'{FILES_BASE_URL}/{file_id}/permissions',
         params=params
-    ).prepare()
+    )
 
 
 def update(
@@ -263,7 +262,7 @@ def update(
     supports_all_drives: Optional[bool] = None,
     use_domain_admin_access: Optional[bool] = None,
     **perm_info,
-) -> PreparedRequest:
+) -> Request:
     '''Update file permission information.
 
     For more information,
@@ -325,4 +324,4 @@ def update(
         headers=headers,
         params=params,
         data=data,
-    ).prepare()
+    )

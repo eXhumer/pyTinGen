@@ -4,7 +4,6 @@ import json
 from typing import List
 from typing import Optional
 from requests import Request
-from requests import PreparedRequest
 from uuid import uuid4 as uuid_generator
 from google.drive.v3 import DRIVE_V3_BASE_URL
 
@@ -14,7 +13,7 @@ DRIVES_BASE_URL = f'{DRIVE_V3_BASE_URL}/drives'
 def create(
     drive_name: str,
     **drive_info,
-) -> PreparedRequest:
+) -> Request:
     '''Creates a new shared drive.
 
     For more information,
@@ -43,12 +42,12 @@ def create(
         params=params,
         headers=headers,
         data=data,
-    ).prepare()
+    )
 
 
 def delete(
     drive_id: str,
-) -> PreparedRequest:
+) -> Request:
     '''Deletes a new shared drive with shared drive ID.
 
     For more information,
@@ -57,14 +56,14 @@ def delete(
     return Request(
         'DELETE',
         f'{DRIVES_BASE_URL}/{drive_id}',
-    ).prepare()
+    )
 
 
 def get(
     drive_id: str,
     fields: Optional[List[str]] = None,
     use_domain_admin_access: Optional[bool] = None,
-) -> PreparedRequest:
+) -> Request:
     '''Retrieve a shared drive information via Shared Drive ID.
 
     For more information,
@@ -85,12 +84,12 @@ def get(
         'GET',
         f'{DRIVES_BASE_URL}/{drive_id}',
         params=params
-    ).prepare()
+    )
 
 
 def hide(
     drive_id: str,
-) -> PreparedRequest:
+) -> Request:
     '''Hides a shared drive with shared drive ID.
 
     For more information,
@@ -99,7 +98,7 @@ def hide(
     return Request(
         'POST',
         f'{DRIVES_BASE_URL}/{drive_id}/hide',
-    ).prepare()
+    )
 
 
 def list_(
@@ -108,7 +107,7 @@ def list_(
     page_token: Optional[str] = None,
     fields: Optional[List[str]] = None,
     use_domain_admin_access: Optional[bool] = None,
-) -> PreparedRequest:
+) -> Request:
     '''List all shared drives.
 
     For more information,
@@ -147,12 +146,12 @@ def list_(
         'GET',
         DRIVES_BASE_URL,
         params=params,
-    ).prepare()
+    )
 
 
 def unhide(
     drive_id: str,
-) -> PreparedRequest:
+) -> Request:
     '''Unhides a shared drive with shared drive ID.
 
     For more information,
@@ -161,14 +160,14 @@ def unhide(
     return Request(
         'POST',
         f'{DRIVES_BASE_URL}/{drive_id}/unhide'
-    ).prepare()
+    )
 
 
 def update(
     drive_id: str,
     use_domain_admin_access: Optional[bool] = None,
     **drive_info,
-) -> PreparedRequest:
+) -> Request:
     '''Update Shared Drive information.
 
     For more information,
@@ -194,4 +193,4 @@ def update(
         headers=headers,
         params=params,
         data=data,
-    ).prepare()
+    )
