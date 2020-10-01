@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import json
 from typing import List
+from pathlib import Path
 from typing import Optional
 from requests import Request
 from google.drive.v3 import DRIVE_V3_BASE_URL
@@ -264,4 +265,94 @@ def list_(
         params=params,
     )
 
-# TODO - Implement Upload/Download
+
+def create_new_resumable_upload(
+    file_path: Path,
+    file_id: Optional[str] = None,
+    parents: Optional[List[str]] = None,
+) -> Request:
+    params = {
+        'uploadType': 'resumable',
+    }
+
+    file_size = f'{file_path.stat().st_size}'
+
+    method = 'POST'
+    url = 'https://www.googleapis.com/upload/drive/v3/files'
+
+    body = {
+        'name': file_path.name,
+        'size': file_size,
+    }
+
+    if file_id is not None:
+        body.update({'id': file_id})
+        url += f'/{file_id}'
+        method = 'PATCH'
+
+    if parents is not None:
+        body.update({'parents': parents})
+
+    data = json.dumps(body)
+
+    headers = {
+        'X-Upload-Content-Length': file_size,
+        'Content-Length': f'{len(data)}',
+        'Content-Type': 'application/json; charset=UTF-8',
+    }
+
+    return Request(
+        method,
+        url,
+        data=data,
+        headers=headers,
+        params=params,
+    )
+
+
+def get_resumable_status(
+    upload_id: str,
+) -> Request:
+    return Request(
+        'PUT',
+        'https://www.googleapis.com/upload/drive/v3/files',
+        params={
+            'uploadType': 'resumable',
+            'upload_id': upload_id,
+        },
+    )
+
+
+def upload_resumable_chunk(
+    upload_id: str,
+    file_path: Path,
+    to_upload_start: Optional[int] = None,
+    to_upload_end: Optional[int] = None,
+) -> Request:
+    file_size = file_path.stat().st_size
+    if to_upload_start and to_upload_end:
+        to_upload_size = to_upload_end - to_upload_start + 1
+    else:
+        to_upload_size = file_size
+
+    with file_path.open(mode='rb') as file_stream:
+        if to_upload_start:
+            file_stream.seek(to_upload_start)
+        data_chunk = file_stream.read(to_upload_size)
+
+    return Request(
+        'PUT',
+        'https://www.googleapis.com/upload/drive/v3/files',
+        params={
+            'uploadType': 'resumable',
+            'upload_id': upload_id,
+        },
+        headers={
+            'Content-Length': f'{to_upload_size}',
+            'Content-Range': f'bytes {to_upload_start}-' +
+            f'{to_upload_end}/{file_size}'
+        },
+        data=data_chunk,
+    )
+
+# TODO - Implement Download
