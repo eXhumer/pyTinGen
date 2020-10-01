@@ -358,9 +358,9 @@ def upload_resumable_chunk(
 
 def download_file_chunked(
     file_id: str,
-    start: int,
-    end: int,
     acknowledge_abuse: bool = False,
+    download_start: Optional[int] = None,
+    download_end: Optional[int] = None,
 ) -> Request:
     params = {
         'alt': 'media',
@@ -372,13 +372,13 @@ def download_file_chunked(
         'Range': 'bytes='
     }
 
-    if start:
-        headers['Range'] += str(start)
+    if download_start:
+        headers['Range'] += str(download_start)
 
     headers['Range'] += '-'
 
-    if end:
-        headers['Range'] += str(end)
+    if download_end:
+        headers['Range'] += str(download_end)
 
     if headers['Range'] == 'bytes=-':
         headers['Range'] = None
