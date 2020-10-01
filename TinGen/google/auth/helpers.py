@@ -3,6 +3,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import Mapping
 from typing import Sequence
 from typing import Optional
 from requests import request
@@ -40,6 +41,34 @@ def load_user_token(
         return user_creds
 
 
+def old_load_user_token(
+    ut_path: Path,
+    app_creds: Mapping[str, str],
+) -> Optional[UserCredentials]:
+    auth_user_info = {
+        'client_id': app_creds['client_id'],
+        'client_secret': app_creds['client_secret'],
+    }
+
+    with ut_path.open(mode='r', encoding='utf8') as ut_stream:
+        user_token = json.load(ut_stream)
+        auth_user_info.update({
+            'refresh_token': user_token['refresh_token'],
+        })
+
+    user_creds = UserCredentials.from_authorized_user_info(auth_user_info)
+
+    try:
+        user_creds.refresh(Request())
+    except RefreshError:
+        logging.exception(
+            'RefreshError occurred while refreshing user token. Most ' +
+            'likely the user\'s refresh token is no longer valid!'
+        )
+        return None
+    return user_creds
+
+
 def load_service_account(
     sa_path: Path,
 ) -> Optional[SACredentials]:
@@ -50,15 +79,27 @@ def load_service_account(
 
 def save_user_token(
     user_creds: UserCredentials,
-    user_token_path: Path
+    user_token_path: Path,
 ) -> None:
     with user_token_path.open(mode='w', encoding='utf8') as \
             token_stream:
         json.dump(json.loads(user_creds.to_json()), token_stream)
 
 
+def old_save_user_token(
+    user_creds: UserCredentials,
+    user_token_path: Path,
+) -> None:
+    with user_token_path.open(mode='w', encoding='utf8') as \
+            token_stream:
+        json.dump({
+            'access_token': user_creds.token,
+            'refresh_token': user_creds.refresh_token,
+        }, token_stream)
+
+
 def revoke_token(
-    token: str
+    token: str,
 ) -> bool:
     response = request(
         'POST',
@@ -76,7 +117,7 @@ def revoke_token(
 def auth_new_user(
     app_creds: dict,
     scopes: Sequence[str],
-    headless: bool = False
+    headless: bool = False,
 ) -> Optional[UserCredentials]:
     flow = InstalledAppFlow.from_client_config(app_creds, scopes)
     try:
