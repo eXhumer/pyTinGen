@@ -355,4 +355,39 @@ def upload_resumable_chunk(
         data=data_chunk,
     )
 
-# TODO - Implement Download
+
+def download_file_chunked(
+    file_id: str,
+    start: int,
+    end: int,
+    acknowledge_abuse: bool = False,
+) -> Request:
+    params = {
+        'alt': 'media',
+        'supportAllDrives': True,
+        'acknowledgeAbuse': acknowledge_abuse,
+    }
+
+    headers = {
+        'Range': 'bytes='
+    }
+
+    if start:
+        headers['Range'] += str(start)
+
+    headers['Range'] += '-'
+
+    if end:
+        headers['Range'] += str(end)
+
+    if headers['Range'] == 'bytes=-':
+        headers['Range'] = None
+
+    return Request(
+        'GET',
+        f'https://www.googleapis.com/drive/v3/files/{file_id}',
+        params=params,
+        headers=headers,
+    )
+
+# TODO - Streaming download
