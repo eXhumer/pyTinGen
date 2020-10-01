@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+from typing import Any
 from typing import List
 from typing import Optional
 from requests import Request
@@ -23,7 +24,7 @@ def create(
     enforce_single_parent: Optional[bool] = None,
     use_domain_admin_access: Optional[bool] = None,
     move_to_new_owners_root: Optional[bool] = None,
-    **perm_info,
+    **perm_info: Any,
 ) -> Request:
     '''Creates a new permission for a file.
 
@@ -261,7 +262,7 @@ def update(
     expiration_time: Optional[datetime] = None,
     supports_all_drives: Optional[bool] = None,
     use_domain_admin_access: Optional[bool] = None,
-    **perm_info,
+    **perm_info: Any,
 ) -> Request:
     '''Update file permission information.
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+from typing import Any
 from typing import List
 from pathlib import Path
 from typing import Optional
@@ -19,7 +20,7 @@ def copy(
     enforce_single_parent: Optional[bool] = None,
     ignore_default_visibility: Optional[bool] = None,
     include_permissions_for_view: Optional[str] = None,
-    **file_info,
+    **file_info: Any,
 ) -> Request:
     '''Make a server side copy using file ID.
 

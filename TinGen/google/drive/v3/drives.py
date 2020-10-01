@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+from typing import Any
 from typing import List
 from typing import Optional
 from requests import Request
@@ -12,7 +13,7 @@ DRIVES_BASE_URL = f'{DRIVE_V3_BASE_URL}/drives'
 
 def create(
     drive_name: str,
-    **drive_info,
+    **drive_info: Any,
 ) -> Request:
     '''Creates a new shared drive.
 
@@ -166,7 +167,7 @@ def unhide(
 def update(
     drive_id: str,
     use_domain_admin_access: Optional[bool] = None,
-    **drive_info,
+    **drive_info: Any,
 ) -> Request:
     '''Update Shared Drive information.
 
