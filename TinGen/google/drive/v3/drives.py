@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
-from typing import Any
+from typing import Any, Mapping
 from typing import List
 from typing import Optional
 from requests import Request
@@ -12,8 +12,8 @@ DRIVES_BASE_URL = f'{DRIVE_V3_BASE_URL}/drives'
 
 
 def create(
-    drive_name: str,
-    **drive_info: Any,
+    drive_info: Mapping[str, Any],
+    **params: Any,
 ) -> Request:
     '''Creates a new shared drive.
 
@@ -22,12 +22,8 @@ def create(
     '''
     req_id = uuid_generator()
 
-    params = {
+    params.update({
         'requestId': str(req_id),
-    }
-
-    drive_info.update({
-        'name': drive_name,
     })
 
     data = json.dumps(drive_info)
@@ -63,28 +59,21 @@ def delete(
 def get(
     drive_id: str,
     fields: Optional[List[str]] = None,
-    use_domain_admin_access: Optional[bool] = None,
+    **params: Any,
 ) -> Request:
     '''Retrieve a shared drive information via Shared Drive ID.
 
     For more information,
     https://developers.google.com/drive/api/v3/reference/drives/get
     '''
-    params = {}
-
     if fields is not None:
         _fields = ','.join(fields)
         params.update({'fields': _fields})
 
-    if use_domain_admin_access is not None:
-        params.update({
-            'useDomainAdminAccess': use_domain_admin_access,
-        })
-
     return Request(
         'GET',
         f'{DRIVES_BASE_URL}/{drive_id}',
-        params=params
+        params=params,
     )
 
 
@@ -103,44 +92,19 @@ def hide(
 
 
 def list_(
-    q: Optional[str] = None,
-    page_size: Optional[int] = None,
-    page_token: Optional[str] = None,
     fields: Optional[List[str]] = None,
-    use_domain_admin_access: Optional[bool] = None,
+    **params: Any,
 ) -> Request:
     '''List all shared drives.
 
     For more information,
     https://developers.google.com/drive/api/v3/reference/drives/list
     '''
-    params = {}
-
     if fields is not None:
         _drive_fields = ','.join(fields)
         _fields = f'kind,nextPageToken,drives({_drive_fields})'
         params.update({
             'fields': _fields,
-        })
-
-    if q is not None:
-        params.update({
-            'q': q,
-        })
-
-    if page_size is not None:
-        params.update({
-            'pageSize': page_size,
-        })
-
-    if page_token is not None:
-        params.update({
-            'pageToken': page_token,
-        })
-
-    if use_domain_admin_access is not None:
-        params.update({
-            'useDomainAdminAccess': use_domain_admin_access,
         })
 
     return Request(
@@ -166,21 +130,14 @@ def unhide(
 
 def update(
     drive_id: str,
-    use_domain_admin_access: Optional[bool] = None,
-    **drive_info: Any,
+    drive_info: Mapping[str, Any],
+    **params: Any,
 ) -> Request:
     '''Update Shared Drive information.
 
     For more information,
     https://developers.google.com/drive/api/v3/reference/drives/update
     '''
-    params = {}
-
-    if use_domain_admin_access is not None:
-        params.update({
-            'useDomainAdminAccess': use_domain_admin_access,
-        })
-
     data = json.dumps(drive_info)
 
     headers = {
