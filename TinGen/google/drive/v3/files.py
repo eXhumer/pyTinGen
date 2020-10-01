@@ -5,7 +5,7 @@ from typing import List
 from pathlib import Path
 from typing import Optional
 from requests import Request
-from google.drive.v3 import DRIVE_V3_BASE_URL
+from TinGen.google.drive.v3 import DRIVE_V3_BASE_URL
 
 FILES_BASE_URL = f'{DRIVE_V3_BASE_URL}/files'
 

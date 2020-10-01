@@ -5,7 +5,7 @@ from typing import List
 from typing import Optional
 from requests import Request
 from uuid import uuid4 as uuid_generator
-from google.drive.v3 import DRIVE_V3_BASE_URL
+from TinGen.google.drive.v3 import DRIVE_V3_BASE_URL
 
 DRIVES_BASE_URL = f'{DRIVE_V3_BASE_URL}/drives'
 
