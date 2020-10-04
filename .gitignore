@@ -1,5 +1,4 @@
 __pycache__/
-credentials.json
-gdrive.token
-index.tfl
-enc_index.tfl
+*.json
+*.token
+*.tfl

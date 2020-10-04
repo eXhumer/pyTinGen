@@ -1,5 +1,7 @@
-tqdm
-pycryptodome
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
+tqdm==4.50.*
+colorama==0.4.*; platform_system == "Windows"
+pycryptodome==3.9.*
+google-api-python-client==1.12.*
+google-auth-httplib2==0.0.*
+google-auth-oauthlib==0.4.*
+zstandard==0.14.*
