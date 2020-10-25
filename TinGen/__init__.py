@@ -404,7 +404,7 @@ class TinGen:
         add_non_nsw_files: bool
     ):
         """Scans the folder id for files and updates the instance index"""
-        title_id_pattern = r"\[[0-9A-Fa-f]{16}\]"
+        title_id_pattern = r"\%5B[0-9A-Fa-f]{16}\%5D"
 
         files = self.gdrive_service.get_all_files_in_folder(
             folder_id,
