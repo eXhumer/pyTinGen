@@ -157,13 +157,20 @@ if __name__ == '__main__':
         compression_flag = CompressionFlag.NO_COMPRESSION
 
     print(f'Creating generated index to {args.index_file}')
-    create_tinfoil_index(
-        generator.index,
-        Path(args.index_file),
-        compression_flag,
-        rsa_pub_key_path=Path(args.public_key) if args.public_key else None,
-        vm_path=Path(args.vm_file) if args.vm_file else None,
-    )
+    if args.encrypt:
+        create_tinfoil_index(
+            generator.index,
+            Path(args.index_file),
+            compression_flag,
+            rsa_pub_key_path=Path(args.public_key) if args.public_key else None,
+            vm_path=Path(args.vm_file) if args.vm_file else None,
+        )
+    else:
+        create_tinfoil_index(
+            generator.index,
+            Path(args.index_file),
+            compression_flag,
+        )
 
     if args.share_files:
         print('Sharing files in index')
