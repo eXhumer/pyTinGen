@@ -16,7 +16,7 @@ from json import dump as json_writer
 from json import load as json_reader
 from json import loads as json_deserialize
 from urllib.parse import quote as url_encode
-from re import search as regex_search
+from re import compile as regex_compile
 from time import sleep
 
 
@@ -412,12 +412,13 @@ class TinGen:
             files_progress_bar
         )
 
+        pattern = regex_compile(title_id_pattern)
         for (file_id, file_details) in files.items():
             url_encoded_file_name = url_encode(file_details["name"], safe="")
             file_valid_nsw_check = add_non_nsw_files or \
                 url_encoded_file_name[-4:] in (".nsp", ".nsz", ".xci", ".xcz")
             file_title_id_check = add_nsw_files_without_title_id or \
-                regex_search(title_id_pattern, url_encoded_file_name)
+                pattern.search(url_encoded_file_name)
             if file_title_id_check and file_valid_nsw_check:
                 file_entry_to_add = {
                     "url": f"gdrive:{file_id}#{url_encoded_file_name}",
@@ -585,7 +586,8 @@ class UTinGen:
         add_nsw_files_without_title_id: bool,
         success: str = None,
     ) -> None:
-        title_id_pattern = r"\[[0-9A-Fa-f]{16}\]"
+        title_id_pattern = r"\%5B[0-9A-Fa-f]{16}\%5D"
+        pattern = regex_compile(title_id_pattern)
         for folder_id in folder_ids:
             files = self.gdrive_service.get_files_in_folder_id(folder_id)
             for (file_id, file_details) in files.items():
@@ -596,7 +598,7 @@ class UTinGen:
                     ".xcz",
                 ):
                     file_name = url_encode(file_details["name"], safe="")
-                    if add_nsw_files_without_title_id or regex_search(
+                    if add_nsw_files_without_title_id or pattern.search(
                         title_id_pattern,
                         file_name,
                     ):
