@@ -1,4 +1,8 @@
 # TinGen
+**This fork will no longer accept any new feature. Only bugfixes will be merged into this fork.**
+
+**This project is being feature deprecated as I plan to replace this project with [TinGenQt](github.com/eXhumer/TinGenQt)**
+
 Script that will allow you to easily generate an index file (with encryption if needed) for use with Tinfoil. 
 
 This project is a based on [this project](https://github.com/BigBrainAFK/tinfoil_gdrive_generator/) by [BigBrainAFK](https://github.com/BigBrainAFK/).  
