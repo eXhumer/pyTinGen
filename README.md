@@ -1,4 +1,6 @@
 # TinGen
+**This project has been renamed to `pyTinGen`. Users who still want to follow the Python 3 version of TinGen can follow [this](https://docs.github.com/en/free-pro-team@latest/github/using-git/changing-a-remotes-url) guide to set remote to `pyTinGen` instead of `TinGen`.**
+
 **This fork will no longer accept any new feature. Only bugfixes will be merged into this fork.**
 
 **This project is being feature deprecated as I plan to replace this project with [TinGenQt](https://github.com/eXhumer/TinGenQt)**
