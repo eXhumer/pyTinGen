@@ -174,7 +174,9 @@ if __name__ == '__main__':
 
     if args.share_files:
         print('Sharing files in index')
-        generator.share_index_files()
+        for folder_id in args.folder_ids:
+            generator.gdrive_service.share_file(folder_id)
+        # generator.share_index_files()
 
     if args.upload_folder_id:
         print(f'Uploading {args.index_file} to {args.upload_folder_id}')
