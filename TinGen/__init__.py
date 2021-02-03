@@ -38,8 +38,8 @@ class GDrive:
             credentials=credentials,
         )
 
+    @staticmethod
     def _cred_to_json(
-        self,
         cred_to_pass
     ):
         return {
@@ -47,8 +47,8 @@ class GDrive:
             "refresh_token": cred_to_pass.refresh_token,
         }
 
+    @staticmethod
     def _json_to_cred(
-        self,
         json_stream,
         client_id,
         client_secret
@@ -63,8 +63,8 @@ class GDrive:
         )
         return creds
 
+    @staticmethod
     def _get_creds(
-        self,
         credentials="credentials.json",
         token="gdrive.token",
         scopes=['https://www.googleapis.com/auth/drive'],
@@ -76,7 +76,7 @@ class GDrive:
             creds = None
             if Path(token).is_file():
                 with open(token, "r") as token_stream:
-                    creds = self._json_to_cred(
+                    creds = GDrive._json_to_cred(
                         token_stream,
                         cred_json["installed"]["client_id"],
                         cred_json["installed"]["client_secret"]
@@ -95,7 +95,7 @@ class GDrive:
                         creds = flow.run_local_server(port=0)
                 with open(token, "w") as token_stream:
                     json_writer(
-                        self._cred_to_json(creds),
+                        GDrive._cred_to_json(creds),
                         token_stream,
                         indent=2,
                     )
