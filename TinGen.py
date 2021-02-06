@@ -165,9 +165,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    theme_err_msg = None
+    theme_msg = None
     if args.theme_error:
-        theme_err_msg = args.theme_error.replace('\\n', '\n').replace('\\t', '\t')
+        theme_msg = args.theme_error.replace('\\n', '\n').replace('\\t', '\t')
 
     theme_blacklist = []
     if args.theme_blacklist:
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         args.tinfoil_min_ver,
         theme_blacklist=theme_blacklist,
         theme_whitelist=theme_whitelist,
-        theme_error=theme_err_msg,
+        theme_error=theme_msg,
     )
 
     if args.auth:
@@ -225,12 +225,20 @@ if __name__ == '__main__':
 
         print(f'Creating generated index to {args.index_file}')
         if args.encrypt:
+            rsa_pub_key_path = None
+            if args.public_key:
+                rsa_pub_key_path = Path(args.public_key)
+
+            vm_path = None
+            if args.vm_file:
+                vm_path = Path(args.vm_file)
+
             create_tinfoil_index(
                 generator.index,
                 Path(args.index_file),
                 compression_flag,
-                rsa_pub_key_path=Path(args.public_key) if args.public_key else None,
-                vm_path=Path(args.vm_file) if args.vm_file else None,
+                rsa_pub_key_path=rsa_pub_key_path,
+                vm_path=vm_path,
             )
         else:
             create_tinfoil_index(
