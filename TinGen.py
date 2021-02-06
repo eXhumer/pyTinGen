@@ -169,11 +169,11 @@ if __name__ == '__main__':
     if args.theme_error:
         theme_msg = args.theme_error.replace('\\n', '\n').replace('\\t', '\t')
 
-    theme_blacklist = []
+    theme_blacklist = None
     if args.theme_blacklist:
         theme_blacklist = args.theme_blacklist
 
-    theme_whitelist = []
+    theme_whitelist = None
     if args.theme_whitelist:
         theme_whitelist = args.theme_whitelist
 
