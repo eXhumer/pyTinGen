@@ -18,6 +18,8 @@ from json import loads as json_deserialize
 from urllib.parse import quote as url_encode
 from re import compile as regex_compile
 from time import sleep
+from typing import Optional
+from typing import List
 
 
 class GDrive:
@@ -362,10 +364,15 @@ class TinGen:
         credentials_path: str,
         token_path: str,
         headless: bool,
+        theme_blacklist: Optional[List[str]] = None,
+        theme_whitelist: Optional[List[str]] = None,
+        theme_error: Optional[str] = None,
     ):
         self.gdrive_service = GDrive(token_path, credentials_path, headless)
         self.files_shared_status = {}
-        self.index = {"files": []}
+        self.index = {"files": [], "themeBlackList": theme_blacklist,
+                      "themeWhitelist": theme_whitelist,
+                      "themeError": theme_error}
 
     def read_index(
         self,

@@ -139,11 +139,44 @@ if __name__ == '__main__':
         help='Flag to not compress index',
     )
 
+    theme_opts_parser = parser.add_argument_group()
+    theme_opts_parser.add_argument(
+        '--theme-blacklist',
+        nargs='*',
+        help='Theme IDs to add to index to blacklist',
+    )
+    theme_opts_parser.add_argument(
+        '--theme-whitelist',
+        nargs='*',
+        help='Theme IDs to add to index to whitelist',
+    )
+    theme_opts_parser.add_argument(
+        '--theme-error',
+        metavar='ERROR_MESSAGE',
+        help='Error message to show if theme check fails',
+    )
+
     args = parser.parse_args()
+
+    theme_err_msg = None
+    if args.theme_error:
+        theme_err_msg = args.theme_error.replace('\\n', '\n').replace('\\t', '\t')
+
+    theme_blacklist = []
+    if args.theme_blacklist:
+        theme_blacklist = args.theme_blacklist
+
+    theme_whitelist = []
+    if args.theme_whitelist:
+        theme_whitelist = args.theme_whitelist
+
     generator = TinGen(
         args.token,
         args.credentials,
         args.headless,
+        theme_blacklist=theme_blacklist,
+        theme_whitelist=theme_whitelist,
+        theme_error=theme_err_msg,
     )
 
     if args.auth:
