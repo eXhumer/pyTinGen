@@ -108,6 +108,13 @@ if __name__ == '__main__':
         action='store_true',
         help='Shares the index file that is uploaded to Google Drive',
     )
+    parser.add_argument(
+        '--tinfoil-min-ver',
+        metavar='TINFOIL_MINIMUM_VERSION',
+        default='7.00',
+        type=str,
+        help='Minimum Tinfoil client version to use index with',
+    )
 
     task_parser = parser.add_mutually_exclusive_group()
     task_parser.add_argument(
@@ -174,6 +181,7 @@ if __name__ == '__main__':
         args.token,
         args.credentials,
         args.headless,
+        args.tinfoil_min_ver,
         theme_blacklist=theme_blacklist,
         theme_whitelist=theme_whitelist,
         theme_error=theme_err_msg,

@@ -364,6 +364,7 @@ class TinGen:
         credentials_path: str,
         token_path: str,
         headless: bool,
+        tinfoil_min_ver: str,
         theme_blacklist: Optional[List[str]] = None,
         theme_whitelist: Optional[List[str]] = None,
         theme_error: Optional[str] = None,
@@ -372,7 +373,7 @@ class TinGen:
         self.files_shared_status = {}
         self.index = {"files": [], "themeBlackList": theme_blacklist,
                       "themeWhitelist": theme_whitelist,
-                      "themeError": theme_error}
+                      "themeError": theme_error, "version": tinfoil_min_ver}
 
     def read_index(
         self,
