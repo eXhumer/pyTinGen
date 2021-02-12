@@ -11,8 +11,27 @@ from pathlib import Path
 from random import randint
 from zlib import compress as zlib_compress
 from zlib import decompress as zlib_decompress
-from zstandard import ZstdCompressor
-from zstandard import ZstdDecompressor
+
+zstd_found = False
+zstandard_found = False
+
+try:
+    from zstandard import ZstdCompressor
+    from zstandard import ZstdDecompressor
+    zstandard_found = True
+except ImportError:
+    pass
+
+if not zstandard_found:
+    try:
+        from zstd import ZSTD_compress
+        from zstd import ZSTD_uncompress
+        zstd_found = True
+    except ImportError:
+        pass
+
+    if not zstd_found:
+        raise ImportError('Unable to find any compatiable zstandard library!')
 
 
 class CompressionFlag(IntEnum):
@@ -51,9 +70,12 @@ def create_tinfoil_index(
     session_key = b""
 
     if compression_flag == CompressionFlag.ZSTD_COMPRESSION:
-        to_write_buffer += ZstdCompressor(level=22).compress(
-            to_compress_buffer
-        )
+        if zstandard_found:
+            to_write_buffer += ZstdCompressor(level=22).compress(
+                to_compress_buffer
+            )
+        elif zstd_found:
+            to_write_buffer += ZSTD_compress(to_compress_buffer, level=22)
 
     elif compression_flag == CompressionFlag.ZLIB_COMPRESSION:
         to_write_buffer += zlib_compress(to_compress_buffer, 9)
@@ -159,9 +181,14 @@ def read_index(index_path: Path, rsa_priv_key_path: Path = None) -> dict:
         to_read_buffer = aes_ctx.decrypt(to_read_buffer)
 
     if compression_flag == CompressionFlag.ZSTD_COMPRESSION:
-        to_read_buffer = ZstdDecompressor().decompress(
-            to_read_buffer[:data_size]
-        )
+        if zstandard_found:
+            to_read_buffer = ZstdDecompressor().decompress(
+                to_read_buffer[:data_size]
+            )
+        elif zstd_found:
+            to_read_buffer = ZSTD_uncompress(
+                to_read_buffer[:data_size]
+            )
 
     elif compression_flag == CompressionFlag.ZLIB_COMPRESSION:
         to_read_buffer = zlib_decompress(to_read_buffer[:data_size])
