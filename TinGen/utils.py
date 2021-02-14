@@ -1,3 +1,4 @@
+from typing import Tuple, Union
 from Crypto.Cipher.AES import MODE_ECB
 from Crypto.Cipher.AES import new as new_aes_ctx
 from Crypto.Cipher.PKCS1_OAEP import new as new_pkcs1_oaep_ctx
@@ -201,3 +202,13 @@ def read_index(index_path: Path, rsa_priv_key_path: Path = None) -> dict:
 
     except JSONDecodeError:
         raise RuntimeError("Unable to deserialize index data.")
+
+
+def format_bytes(size: int, nround: int = 2) -> Tuple[int, Union[float, int]]:
+    power = 2**10
+    n = 0
+    power_labels = {0: '', 1: 'K', 2: 'M', 3: 'G', 4: 'T', 5: 'P'}
+    while size >= power:
+        size /= power
+        n += 1
+    return (round(size, nround), power_labels[n]+'B')
