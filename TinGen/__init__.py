@@ -5,6 +5,7 @@ from googleapiclient.http import MediaFileUpload
 from requests import Session
 from tqdm import tqdm
 from pathlib import Path
+from datetime import datetime, timezone
 
 from googleapiclient.errors import HttpError
 from google.auth.exceptions import TransportError
@@ -18,6 +19,7 @@ from json import loads as json_deserialize
 from urllib.parse import quote as url_encode
 from re import compile as regex_compile
 from time import sleep
+from TinGen.utils import format_bytes
 from typing import Optional
 from typing import List
 
@@ -371,6 +373,24 @@ class TinGen:
     ):
         self.gdrive_service = GDrive(token_path, credentials_path, headless)
         self.files_shared_status = {}
+        self.title_ext_infos = {
+            "nsp": {
+                "count": 0,
+                "size": 0,
+            },
+            "nsz": {
+                "count": 0,
+                "size": 0,
+            },
+            "xci": {
+                "count": 0,
+                "size": 0,
+            },
+            "xcz": {
+                "count": 0,
+                "size": 0,
+            },
+        }
         self.index = {"files": [], "themeBlackList": theme_blacklist,
                       "themeWhitelist": theme_whitelist,
                       "themeError": theme_error, "version": tinfoil_min_ver}
@@ -423,11 +443,18 @@ class TinGen:
         pattern = regex_compile(title_id_pattern)
         for (file_id, file_details) in files.items():
             url_encoded_file_name = url_encode(file_details["name"], safe="")
+            file_ext = url_encoded_file_name[-3:]
             file_valid_nsw_check = add_non_nsw_files or \
-                url_encoded_file_name[-4:] in (".nsp", ".nsz", ".xci", ".xcz")
+                file_ext in self.title_ext_infos.keys()
             file_title_id_check = add_nsw_files_without_title_id or \
                 pattern.search(url_encoded_file_name)
             if file_title_id_check and file_valid_nsw_check:
+                old_val_count = self.title_ext_infos[file_ext]["count"]
+                old_val_size = self.title_ext_infos[file_ext]["size"]
+                self.title_ext_infos[file_ext]["count"] = old_val_count + 1
+                self.title_ext_infos[file_ext]["size"] = old_val_size + \
+                    int(file_details["size"])
+
                 file_entry_to_add = {
                     "url": f"gdrive:{file_id}#{url_encoded_file_name}",
                     "size": int(file_details["size"])
@@ -452,12 +479,34 @@ class TinGen:
             if not self.files_shared_status.get(entry_file_id):
                 self.gdrive_service.share_file(entry_file_id)
 
+    def add_nsw_title_info_to_success(
+        self,
+    ):
+        msg = ""
+
+        for ext in self.title_ext_infos.keys():
+            title_count = self.title_ext_infos[ext]["count"]
+            if title_count == 0:
+                continue
+            title_size_fmt = format_bytes(self.title_ext_infos[ext]["size"])
+            msg += f"{ext.upper()}\n├─ Title Count: {title_count}"
+            msg += f"\n└─ Size: {title_size_fmt[0]} {title_size_fmt[1]}\n"
+
+        dt_str = datetime.now(timezone.utc).strftime("%B %d, %Y | %I:%M%p UTC")
+        msg += f"\nIndex Updated: {dt_str}\n"
+        msg += "\n--------------\n\n"
+        self.index.update({"success": msg})
+
     def update_index_success_message(
         self,
         success_message: str
     ):
         """Updates the index success message with new message"""
-        self.index.update({"success": success_message})
+        if self.index.get("success", False):
+            self.index.update({"success": self.index["success"] +
+                              success_message})
+        else:
+            self.index.update({"success": success_message})
 
     def index_generator(
         self,

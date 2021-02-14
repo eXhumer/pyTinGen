@@ -66,6 +66,11 @@ if __name__ == '__main__':
         'to index',
     )
     parser.add_argument(
+        '--add-nsw-info-to-success',
+        action='store_true',
+        help='Adds simple information of NSW titles added to index',
+    )
+    parser.add_argument(
         '--success',
         metavar='SUCCESS_MESSAGE',
         help='Adds a success message to index file to show if index is ' +
@@ -207,6 +212,10 @@ if __name__ == '__main__':
             args.add_nsw_files_without_title_id,
             args.add_non_nsw_files,
         )
+
+        if args.add_nsw_info_to_success:
+            print('Adding NSW title information message to index')
+            generator.add_nsw_title_info_to_success()
 
         if args.success:
             print('Adding success message to index')
