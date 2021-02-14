@@ -71,6 +71,16 @@ if __name__ == '__main__':
         help='Adds simple information of NSW titles added to index',
     )
     parser.add_argument(
+        '--add-update-date-to-success',
+        action='store_true',
+        help='Adds index update date to index',
+    )
+    parser.add_argument(
+        '--add-update-time-to-success',
+        action='store_true',
+        help='Adds index update time to index',
+    )
+    parser.add_argument(
         '--success',
         metavar='SUCCESS_MESSAGE',
         help='Adds a success message to index file to show if index is ' +
@@ -216,6 +226,13 @@ if __name__ == '__main__':
         if args.add_nsw_info_to_success:
             print('Adding NSW title information message to index')
             generator.add_nsw_title_info_to_success()
+
+        if args.add_update_date_to_success or args.add_update_time_to_success:
+            print('Adding date/time information to index')
+            generator.add_datetime_to_success(
+                args.add_update_date_to_success,
+                args.add_update_time_to_success,
+            )
 
         if args.success:
             print('Adding success message to index')

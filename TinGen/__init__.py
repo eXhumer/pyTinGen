@@ -493,10 +493,27 @@ class TinGen:
             msg += f"{ext.upper()}\n├─ Title Count: {fmt_title_count}"
             msg += f"\n└─ Size: {title_size_fmt[0]} {title_size_fmt[1]}\n"
 
-        dt_str = datetime.now(timezone.utc).strftime("%B %d, %Y | %I:%M%p UTC")
-        msg += f"\nIndex Updated: {dt_str}\n"
-        msg += "\n--------------\n\n"
         self.index.update({"success": msg})
+
+    def add_datetime_to_success(
+        self,
+        add_date: bool,
+        add_time: bool,
+    ):
+        now_dt_utc = datetime.now(timezone.utc)
+        fmt_str = ""
+        if add_date:
+            fmt_str = "%B %d, %Y"
+            if add_time:
+                fmt_str += " | "
+        if add_time:
+            fmt_str += "%I:%M%p UTC"
+        dt_str = now_dt_utc.strftime(fmt_str)
+        msg = f"\nIndex Updated: {dt_str}\n"
+        if self.index["success"]:
+            self.index.update({"success": self.index["success"] + msg})
+        else:
+            self.index.update({"success": msg})
 
     def update_index_success_message(
         self,
@@ -504,8 +521,9 @@ class TinGen:
     ):
         """Updates the index success message with new message"""
         if self.index.get("success", False):
+            separator = "\n--------------\n\n"
             self.index.update({"success": self.index["success"] +
-                              success_message})
+                              separator + success_message})
         else:
             self.index.update({"success": success_message})
 
