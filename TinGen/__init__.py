@@ -488,8 +488,9 @@ class TinGen:
             title_count = self.title_ext_infos[ext]["count"]
             if title_count == 0:
                 continue
+            fmt_title_count = "{:,}".format(title_count)
             title_size_fmt = format_bytes(self.title_ext_infos[ext]["size"])
-            msg += f"{ext.upper()}\n├─ Title Count: {title_count}"
+            msg += f"{ext.upper()}\n├─ Title Count: {fmt_title_count}"
             msg += f"\n└─ Size: {title_size_fmt[0]} {title_size_fmt[1]}\n"
 
         dt_str = datetime.now(timezone.utc).strftime("%B %d, %Y | %I:%M%p UTC")
