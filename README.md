@@ -29,16 +29,17 @@ Usage instructions can be found [here](https://github.com/eXhumer/TinGen/wiki).
 
 ```
 usage: TinGen.py [-h] [--credentials CREDENTIALS_FILE_NAME] [--token TOKEN_FILE_PATH] [--headless]
-                 [--index-file INDEX_FILE_PATH] [--share-files] [--no-recursion]
-                 [--add-nsw-files-without-title-id] [--add-non-nsw-files]
-                 [--success SUCCESS_MESSAGE] [--encrypt] [--public-key PUBLIC_KEY_FILE_PATH]
-                 [--vm-file VM_FILE] [--upload-to-folder-id UPLOAD_FOLDER_ID]
+                 [--index-file INDEX_FILE_PATH] [--share-files] [--no-recursion] [--add-nsw-files-without-title-id]
+                 [--add-non-nsw-files] [--add-nsw-info-to-success] [--add-update-date-to-success]
+                 [--add-update-time-to-success] [--success SUCCESS_MESSAGE] [--encrypt]
+                 [--public-key PUBLIC_KEY_FILE_PATH] [--vm-file VM_FILE] [--upload-to-folder-id UPLOAD_FOLDER_ID]
                  [--upload-to-my-drive] [--new-upload-id] [--share-uploaded-index]
-                 [--zstandard | --zlib | --no-compress]
-                 [FOLDER_ID_TO_SCAN [FOLDER_ID_TO_SCAN ...]]
+                 [--tinfoil-min-ver TINFOIL_MINIMUM_VERSION] [--auth | --generator]
+                 [--zstandard | --zlib | --no-compress] [--theme-blacklist [THEME_BLACKLIST ...]]
+                 [--theme-whitelist [THEME_WHITELIST ...]] [--theme-error ERROR_MESSAGE]
+                 [FOLDER_ID_TO_SCAN ...]
 
-Script that will allow you to generate an index file with Google Drive file links for use with
-Tinfoil
+Script that will allow you to generate an index file with Google Drive file links for use with Tinfoil
 
 positional arguments:
   FOLDER_ID_TO_SCAN     Folder IDs of Google Drive folders to scan
@@ -49,8 +50,7 @@ optional arguments:
                         Path to Google Application Credentials
   --token TOKEN_FILE_PATH
                         Path to Google OAuth2.0 User Token
-  --headless            Allows to perform Google OAuth2.0 User Token Authentication in headless
-                        environment
+  --headless            Allows to perform Google OAuth2.0 User Token Authentication in headless environment
   --index-file INDEX_FILE_PATH
                         Path to output index file
   --share-files         Share all files inside the index file
@@ -58,9 +58,14 @@ optional arguments:
   --add-nsw-files-without-title-id
                         Adds files without valid Title ID
   --add-non-nsw-files   Adds files without valid NSW ROM extension(NSP/NSZ/XCI/XCZ) to index
+  --add-nsw-info-to-success
+                        Adds simple information of NSW titles added to index
+  --add-update-date-to-success
+                        Adds index update date to index
+  --add-update-time-to-success
+                        Adds index update time to index
   --success SUCCESS_MESSAGE
-                        Adds a success message to index file to show if index is successfully read
-                        by Tinfoil
+                        Adds a success message to index file to show if index is successfully read by Tinfoil
   --encrypt             Encrypts the resulting index file with AES-ECB-256
   --public-key PUBLIC_KEY_FILE_PATH
                         Path to RSA Public Key to encrypt AES-ECB-256 key with
@@ -68,13 +73,23 @@ optional arguments:
   --upload-to-folder-id UPLOAD_FOLDER_ID
                         Upload resulting index to Folder ID supplied
   --upload-to-my-drive  Upload resulting index to My Drive
-  --new-upload-id       Uploads the newly generated index file with a new File ID instead of
-                        replacing old one
+  --new-upload-id       Uploads the newly generated index file with a new File ID instead of replacing old one
   --share-uploaded-index
                         Shares the index file that is uploaded to Google Drive
+  --tinfoil-min-ver TINFOIL_MINIMUM_VERSION
+                        Minimum Tinfoil client version to use index with
+  --auth                Run Google User Token authorize task if token doesn't exist
+  --generator           Run index generation task
   --zstandard, --zstd   Compresses index with Zstandard compression method
   --zlib                Compresses index with zlib compression method
   --no-compress         Flag to not compress index
+
+  --theme-blacklist [THEME_BLACKLIST ...]
+                        Theme IDs to add to index to blacklist
+  --theme-whitelist [THEME_WHITELIST ...]
+                        Theme IDs to add to index to whitelist
+  --theme-error ERROR_MESSAGE
+                        Error message to show if theme check fails
 ```
 
 ## Credits
