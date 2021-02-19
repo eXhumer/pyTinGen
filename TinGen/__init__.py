@@ -391,9 +391,17 @@ class TinGen:
                 "size": 0,
             },
         }
-        self.index = {"files": [], "themeBlackList": theme_blacklist,
-                      "themeWhitelist": theme_whitelist,
-                      "themeError": theme_error, "version": tinfoil_min_ver}
+
+        self.index = {"files": [], "version": tinfoil_min_ver}
+
+        if theme_blacklist:
+            self.index.update({"themeBlackList": theme_blacklist})
+
+        if theme_blacklist:
+            self.index.update({"themeWhitelist": theme_whitelist})
+
+        if theme_error:
+            self.index.update({"themeError": theme_error})
 
     def read_index(
         self,
