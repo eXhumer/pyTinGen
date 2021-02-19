@@ -510,7 +510,7 @@ class TinGen:
             fmt_str += "%I:%M%p UTC"
         dt_str = now_dt_utc.strftime(fmt_str)
         msg = f"\nIndex Updated: {dt_str}\n"
-        if self.index["success"]:
+        if self.index.get("success", False):
             self.index.update({"success": self.index["success"] + msg})
         else:
             self.index.update({"success": msg})
