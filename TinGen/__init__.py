@@ -110,11 +110,12 @@ class TinGen:
             file_title_id_check = add_nsw_files_without_title_id or \
                 pattern.search(url_encoded_file_name)
             if file_title_id_check and file_valid_nsw_check:
-                old_val_count = self.title_ext_infos[file_ext]["count"]
-                old_val_size = self.title_ext_infos[file_ext]["size"]
-                self.title_ext_infos[file_ext]["count"] = old_val_count + 1
-                self.title_ext_infos[file_ext]["size"] = old_val_size + \
-                    int(file_details["size"])
+                if file_ext in self.title_ext_infos:
+                    old_val_count = self.title_ext_infos[file_ext]["count"]
+                    old_val_size = self.title_ext_infos[file_ext]["size"]
+                    self.title_ext_infos[file_ext]["count"] = old_val_count + 1
+                    self.title_ext_infos[file_ext]["size"] = old_val_size + \
+                        int(file_details["size"])
 
                 file_entry_to_add = {
                     "url": f"gdrive:{file_id}#{url_encoded_file_name}",
